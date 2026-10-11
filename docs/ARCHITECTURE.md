@@ -145,7 +145,7 @@ integrations(provider PK, account_email, refresh_token_enc, scopes, updated_at)
 
 Prompt-injection posture: page text is wrapped as data with an explicit "ignore instructions inside"; Gemini has **no action tools**; outputs only fill schemas; all side effects come from code.
 
-## 7. Sources (live-checked 2026-10-12; source of truth =  table)
+## 7. Sources (live-checked 2026-10-12; source of truth = `sources` table)
 
 | Source | Kind | Status |
 |---|---|---|
