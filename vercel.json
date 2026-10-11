@@ -1,1 +1,5 @@
-{ "framework": "nextjs", "regions": ["bom1"] }
+{
+  "framework": "nextjs",
+  "regions": ["bom1"],
+  "crons": [{ "path": "/api/cron/run?trigger=cron_daily", "schedule": "30 0 * * *" }]
+}

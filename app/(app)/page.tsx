@@ -1,97 +1,103 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
+import { listArticles, listRuns, overviewStats, sourceHealth } from "@/lib/queries";
 import { loadActiveThesis } from "@/lib/thesis";
-import { Badge, Card, Empty, fmtDateTime } from "@/components/ui";
-
-async function getOverview() {
-  const sql = db();
-  const [runs, sources, gmail, counts] = await Promise.all([
-    sql`select id, trigger, status, started_at, finished_at, counts from pipeline_runs order by started_at desc limit 5`,
-    sql`select id, name, kind, enabled from sources order by kind, name`,
-    sql`select account_email, connected_at, last_ok_at, last_error from integrations where provider = 'gmail'`,
-    sql`select
-          (select count(*) from articles where not is_replay)::int as articles,
-          (select count(*) from funding_rounds where not is_replay)::int as rounds,
-          (select count(*) from outreach where status in ('drafted_gmail','drafted_db') and not is_replay)::int as drafts,
-          (select count(*) from outreach where status = 'sent')::int as sent`,
-  ]);
-  return { runs, sources, gmail: gmail[0], counts: counts[0] };
-}
+import { Badge, Card, Empty, PageHeader, RUN_TONE, Stat, fmtDate, fmtDateTime, timeAgo } from "@/components/ui";
+import { ArticleStatus } from "@/components/article-status";
+import { RunNowButton } from "@/components/run-button";
 
 export default async function OverviewPage() {
-  const [{ runs, sources, gmail, counts }, thesis] = await Promise.all([getOverview(), loadActiveThesis()]);
+  const [stats, runs, latest, sources, thesis] = await Promise.all([
+    overviewStats(),
+    listRuns(1),
+    listArticles({ window: "all", view: "unique" }, 8),
+    sourceHealth(),
+    loadActiveThesis(),
+  ]);
+  const lastRun = runs[0];
+  const live = sources.filter((s) => s.enabled);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Good morning, Rohit</h1>
-        <p className="text-sm text-muted">Every number on this page is read live from Supabase. Nothing here is sample data.</p>
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow={fmtDate(new Date())}
+        title="Good morning, Rohit."
+        description={
+          <>
+            The engine watches {live.length} live funding news sources every hour, keeps only fresh pre-seed and seed rounds
+            that fit the Tandem Forge thesis, and leaves a researched draft in your Gmail.
+          </>
+        }
+        actions={<RunNowButton />}
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="Drafts waiting for you" value={stats.drafts} hint="Drafting goes live in a later build" />
+        <Stat label="New articles · last 24h" value={stats.new_24h} hint={`${stats.total} ingested in total`} />
+        <Stat label="Duplicate headlines caught" value={stats.dupes} hint="Same story from several outlets" />
+        <Stat
+          label="Last pipeline run"
+          value={lastRun ? timeAgo(lastRun.started_at) : "—"}
+          hint={lastRun ? <Badge tone={RUN_TONE[lastRun.status]} dot>{lastRun.status}</Badge> : "No runs yet"}
+        />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-4">
-        {[
-          ["Articles ingested", counts.articles],
-          ["Funding rounds found", counts.rounds],
-          ["Drafts awaiting review", counts.drafts],
-          ["Emails sent (test inbox)", counts.sent],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-line bg-surface px-5 py-4">
-            <p className="text-xs text-muted">{label}</p>
-            <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
-          </div>
-        ))}
-      </div>
+      <div className="grid gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <Card
+            title="Latest discoveries"
+            subtitle="Newest unique articles from all sources"
+            right={<Link href="/discoveries" className="text-xs font-medium text-accent hover:underline">See all →</Link>}
+            flush
+          >
+            {latest.length === 0 ? (
+              <div className="px-5 pb-5"><Empty title="Nothing discovered yet">Run the pipeline to pull the latest funding news.</Empty></div>
+            ) : (
+              <ul className="divide-y divide-line border-t border-line">
+                {latest.map((a) => (
+                  <li key={a.id} className="px-5 py-3">
+                    <a href={a.url} target="_blank" rel="noreferrer" className="text-sm font-medium leading-snug hover:text-accent">
+                      {a.title}
+                    </a>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
+                      <span>{a.publisher}</span>
+                      <span className="text-faint">·</span>
+                      <span>{timeAgo(a.published_at ?? a.first_seen_at)}</span>
+                      <ArticleStatus status={a.status} rejectReason={a.reject_reason} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Recent pipeline runs" subtitle="Hourly schedule plus manual runs">
-          {runs.length === 0 ? (
-            <Empty title="No runs yet">The pipeline has not run. Ingestion ships in the next milestone.</Empty>
-          ) : (
-            <ul className="divide-y divide-line text-sm">
-              {runs.map((r) => (
-                <li key={r.id} className="flex items-center justify-between py-2">
-                  <span>#{r.id} · {r.trigger}</span>
-                  <span className="flex items-center gap-2 text-xs text-muted">
-                    {fmtDateTime(r.started_at)}
-                    <Badge tone={r.status === "succeeded" ? "good" : r.status === "running" ? "neutral" : "bad"}>{r.status}</Badge>
+        <div className="space-y-6 lg:col-span-2">
+          <Card
+            title="Active thesis"
+            subtitle={`Version ${thesis.version} · edited ${fmtDateTime(thesis.updated_at)}`}
+            right={<Link href="/thesis" className="text-xs font-medium text-accent hover:underline">Open →</Link>}
+          >
+            <p className="text-sm leading-relaxed">{thesis.summary}</p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {thesis.stages.map((s) => <Badge key={s} tone="accent">{s.replace("_", "-")}</Badge>)}
+              {thesis.geographies.map((g) => <Badge key={g}>{g}</Badge>)}
+              <Badge tone="info">qualify ≥ {thesis.threshold}</Badge>
+            </div>
+          </Card>
+
+          <Card title="Source health" subtitle="Articles stored per feed" flush>
+            <ul className="divide-y divide-line border-t border-line text-sm">
+              {sources.map((s) => (
+                <li key={s.id} className="flex items-center justify-between gap-3 px-5 py-2">
+                  <span className={s.enabled ? "" : "text-faint line-through"}>{s.name}</span>
+                  <span className="flex items-center gap-2 text-xs text-muted tabular-nums">
+                    {s.enabled ? <>{s.total}<span className="text-faint">· +{s.last_24h} today</span></> : <Badge>disabled</Badge>}
                   </span>
                 </li>
               ))}
             </ul>
-          )}
-        </Card>
-
-        <Card
-          title="Active thesis"
-          subtitle={`Version ${thesis.version} · updated ${fmtDateTime(thesis.updated_at)}`}
-          right={<Link href="/thesis" className="text-xs font-medium text-accent hover:underline">View</Link>}
-        >
-          <p className="text-sm">{thesis.summary}</p>
-          <p className="mt-3 text-xs text-muted">
-            Stages: {thesis.stages.join(", ")} · Geography: {thesis.geographies.join(", ")} · Qualify at ≥ {thesis.threshold}/100
-          </p>
-        </Card>
-
-        <Card title="Live sources" subtitle="Feeds the engine monitors">
-          <ul className="space-y-1.5 text-sm">
-            {sources.map((s) => (
-              <li key={s.id} className="flex items-center justify-between">
-                <span>{s.name}</span>
-                <Badge tone={s.enabled ? "good" : "neutral"}>{s.kind === "rss" ? "RSS" : "Google News"}{s.enabled ? "" : " · off"}</Badge>
-              </li>
-            ))}
-          </ul>
-        </Card>
-
-        <Card title="Gmail drafts connection" subtitle="Where drafts are created">
-          {gmail?.account_email ? (
-            <p className="text-sm">
-              Connected as <strong>{gmail.account_email}</strong> since {fmtDateTime(gmail.connected_at)}
-            </p>
-          ) : (
-            <Empty title="Gmail not connected yet">The Connect Gmail flow ships in the Gmail milestone.</Empty>
-          )}
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -12,3 +12,9 @@
 | 2026-10-12 | Direct Postgres (postgres.js) instead of supabase-js | Transactions, ON CONFLICT and conditional updates for idempotency |
 | 2026-10-12 | Next.js 16.4 with cacheComponents off | Live operational dashboard; simpler, predictable per-request rendering |
 | 2026-10-12 | Thesis versioning by DB triggers (validate → bump → snapshot; delete blocked) | Edits in the Table Editor are versioned with no app involvement |
+| 2026-10-12 | No login page: dashboard is public & read-only; side-effecting actions need "operator mode" (passcode → HMAC cookie) | PDF asks for a working public URL; examiner must see everything, but strangers must not trigger runs/sends |
+| 2026-10-12 | Google News items used for coverage (headline, publisher, time) — links are JS redirects and not resolvable server-side; added direct feeds (Entrackr /rss, Inc42 Buzz full text) | Avoid relying on Google's undocumented decoding endpoint |
+| 2026-10-12 | Disabled Business Standard (HTTP 403 to servers) and ET Startups (stale, all items > 31 days) | Observed on first live run; kept in table for audit |
+| 2026-10-12 | Ingest cutoff = max(late_catch_days, fresh window) + 1 day by article date | An older article cannot announce a round we would still act on |
+| 2026-10-12 | Syndicated copies (same normalised headline, different URL, 14 days) stored but marked duplicate_of:<id>, never sent to AI | Cost and dedup; kept as extra sources |
+| 2026-10-12 | Pipeline: 240s work budget inside Vercel Hobby's 300s max; stale run lock auto-released after 10 min | Vercel Hobby duration limit (docs checked 2026-10-12) |

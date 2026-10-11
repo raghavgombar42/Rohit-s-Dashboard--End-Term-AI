@@ -145,19 +145,21 @@ integrations(provider PK, account_email, refresh_token_enc, scopes, updated_at)
 
 Prompt-injection posture: page text is wrapped as data with an explicit "ignore instructions inside"; Gemini has **no action tools**; outputs only fill schemas; all side effects come from code.
 
-## 7. Sources (checked live 2026-10-11)
+## 7. Sources (live-checked 2026-10-12; source of truth =  table)
 
-| Source | Status | Role |
+| Source | Kind | Status |
 |---|---|---|
-| Google News RSS search (e.g. `"raises" seed funding India when:1d`, plus fintech/insurtech/D2C/quick-commerce queries) | 200 ✅ | Breadth: aggregates hundreds of outlets |
-| Inc42 `/feed/` | 200, 24 items ✅ | Indian startup funding (core) |
-| YourStory `/feed` | 200, 20 items ✅ | Indian startups |
-| Economic Times Tech – Funding RSS | 200, 50 items ✅ | Indian funding desk |
-| TechCrunch Venture feed | 200, 20 items ✅ | Global, for an optional global lane |
-| Entrackr `/feed/` | 404 ❌ | Covered via Google News queries (`site:entrackr.com`) |
-| VCCircle feed | 500 ❌ | Excluded |
+| Inc42 (/feed) + Inc42 Buzz (full text via content:encoded) | RSS | ✅ |
+| Entrackr (/rss) | RSS | ✅ 50 items |
+| YourStory (/feed, full text) | RSS | ✅ |
+| Economic Times Tech – Funding | RSS | ✅ |
+| TechCrunch Venture | RSS | ✅ (global) |
+| Google News searches: seed India, fintech/insurtech, D2C/quick commerce | RSS | ✅ headline + publisher + time only |
+| Business Standard Startups | RSS | ❌ HTTP 403 → disabled |
+| ET Startups | RSS | ❌ stale → disabled |
+| VCCircle, DealStreetAsia | RSS | ❌ 500/503 → not added |
 
-⚠️ Google News links are encoded redirects; full text may not be fetchable. Plan: use the title + snippet for triage, then fetch publisher URLs directly where available, falling back to Gemini URL context / grounding. **To verify in M3.**
+Google News links are JavaScript redirects (verified): no server-side article text. Their value is coverage and cross-confirmation; text for extraction comes from direct feeds or a publisher page fetch (M4).
 
 ## 8. Gmail integration
 
@@ -174,5 +176,5 @@ Prompt-injection posture: page text is wrapped as data with an explicit "ignore 
 
 - Secrets only in Vercel env / `.env.local` (gitignored); `.env.example` has names only.
 - Supabase accessed only from the server with the secret key; RLS on with no anon policies.
-- Dashboard password gate (cookie = HMAC of the password); cron endpoint bearer secret; OAuth `state` parameter checked.
+- No login page: all pages are public and read-only. Side-effecting endpoints (/api/actions/*, /api/google/*) require operator mode (passcode → HMAC cookie), enforced in proxy.ts and again in each handler. Cron endpoint uses a bearer secret. OAuth `state` checked.
 - No PII beyond public founder names and business emails; replay/test rows flagged.

@@ -1,0 +1,63 @@
+import { db } from "../db";
+import { createContext, type RunContext, type RunTrigger } from "./context";
+import { ingestStage } from "./ingest";
+
+type Stage = { name: string; run: (ctx: RunContext) => Promise<void> };
+
+// Stages run in order. Each one only picks up items in the state it owns, so an
+// interrupted run is simply resumed by the next one.
+const STAGES: Stage[] = [{ name: "ingest", run: ingestStage }];
+
+const STALE_LOCK_MINUTES = 10;
+
+export type RunResult =
+  | { status: "skipped"; reason: string }
+  | { status: "succeeded" | "partial" | "failed"; runId: number; counts: Record<string, number>; error?: string };
+
+async function acquireLock(trigger: RunTrigger): Promise<number | null> {
+  const sql = db();
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const [row] = await sql<{ id: number }[]>`insert into pipeline_runs (trigger) values (${trigger}) returning id`;
+      return row.id;
+    } catch (e) {
+      if ((e as { code?: string }).code !== "23505") throw e; // not the run-lock violation
+      // Another run holds the lock. If it has been "running" too long it crashed: release it.
+      const released = await sql`
+        update pipeline_runs set status = 'failed', finished_at = now(), error = 'Stale lock released (run exceeded time limit)'
+        where status = 'running' and started_at < now() - make_interval(mins => ${STALE_LOCK_MINUTES})
+        returning id`;
+      if (released.length === 0) return null;
+    }
+  }
+  return null;
+}
+
+export async function runPipeline(trigger: RunTrigger, budgetMs = 240_000): Promise<RunResult> {
+  const runId = await acquireLock(trigger);
+  if (runId === null) return { status: "skipped", reason: "Another pipeline run is in progress" };
+
+  const ctx = createContext(runId, trigger, budgetMs);
+  const sql = db();
+  let fatal: string | undefined;
+
+  for (const stage of STAGES) {
+    if (ctx.timeLeft() <= 0) {
+      await ctx.log("warn", stage.name, "Time budget used up; remaining work continues next run");
+      break;
+    }
+    try {
+      await stage.run(ctx);
+    } catch (e) {
+      fatal = `${stage.name}: ${(e as Error).message}`;
+      await ctx.log("error", stage.name, `Stage crashed: ${(e as Error).message}`);
+      break;
+    }
+  }
+
+  const status = fatal ? "failed" : ctx.hadErrors || (ctx.counts.feeds_failed ?? 0) > 0 ? "partial" : "succeeded";
+  await sql`
+    update pipeline_runs set status = ${status}, finished_at = now(), counts = ${sql.json(ctx.counts)}, error = ${fatal ?? null}
+    where id = ${runId}`;
+  return { status, runId, counts: ctx.counts, error: fatal };
+}
