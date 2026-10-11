@@ -1,12 +1,18 @@
 import { db } from "../db";
 import { createContext, type RunContext, type RunTrigger } from "./context";
 import { ingestStage } from "./ingest";
+import { triageStage } from "./triage";
+import { extractStage } from "./extract";
 
 type Stage = { name: string; run: (ctx: RunContext) => Promise<void> };
 
 // Stages run in order. Each one only picks up items in the state it owns, so an
 // interrupted run is simply resumed by the next one.
-const STAGES: Stage[] = [{ name: "ingest", run: ingestStage }];
+const STAGES: Stage[] = [
+  { name: "ingest", run: ingestStage },
+  { name: "triage", run: triageStage },
+  { name: "extract", run: extractStage },
+];
 
 const STALE_LOCK_MINUTES = 10;
 

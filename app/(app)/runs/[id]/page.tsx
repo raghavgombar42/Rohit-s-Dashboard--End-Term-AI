@@ -10,6 +10,14 @@ const COUNT_LABELS: Record<string, string> = {
   articles_new: "New articles stored",
   articles_syndicated_dupes: "Duplicate headlines",
   items_too_old: "Too old to matter",
+  triage_funding: "AI: funding stories",
+  triage_not_funding: "AI: not funding",
+  articles_extracted: "Articles extracted",
+  rounds_new: "New rounds passed rules",
+  rounds_merged: "Merged into known round",
+  rounds_gated_out: "Rounds filtered by rules",
+  rounds_unverified: "Rounds failing quote check",
+  extract_errors: "Extraction errors",
 };
 
 const LEVEL_TONE = { info: "neutral", warn: "warn", error: "bad" } as const;

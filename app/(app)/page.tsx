@@ -1,17 +1,18 @@
 import Link from "next/link";
-import { listArticles, listRuns, overviewStats, sourceHealth } from "@/lib/queries";
+import { funnelCounts, listArticles, listRuns, overviewStats, sourceHealth } from "@/lib/queries";
 import { loadActiveThesis } from "@/lib/thesis";
 import { Badge, Card, Empty, PageHeader, RUN_TONE, Stat, fmtDate, fmtDateTime, timeAgo } from "@/components/ui";
 import { ArticleStatus } from "@/components/article-status";
 import { RunNowButton } from "@/components/run-button";
 
 export default async function OverviewPage() {
-  const [stats, runs, latest, sources, thesis] = await Promise.all([
+  const [stats, runs, latest, sources, thesis, funnel] = await Promise.all([
     overviewStats(),
     listRuns(1),
     listArticles({ window: "all", view: "unique" }, 8),
     sourceHealth(),
     loadActiveThesis(),
+    funnelCounts(),
   ]);
   const lastRun = runs[0];
   const live = sources.filter((s) => s.enabled);
@@ -33,13 +34,32 @@ export default async function OverviewPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Drafts waiting for you" value={stats.drafts} hint="Drafting goes live in a later build" />
         <Stat label="New articles · last 24h" value={stats.new_24h} hint={`${stats.total} ingested in total`} />
-        <Stat label="Duplicate headlines caught" value={stats.dupes} hint="Same story from several outlets" />
+        <Stat label="Rounds that passed the rules" value={funnel.rounds_pass} hint={`${funnel.rounds_fresh} fresh (≤ 24h) · rest are late catches`} />
         <Stat
           label="Last pipeline run"
           value={lastRun ? timeAgo(lastRun.started_at) : "—"}
           hint={lastRun ? <Badge tone={RUN_TONE[lastRun.status]} dot>{lastRun.status}</Badge> : "No runs yet"}
         />
       </div>
+
+      <Card title="Today's funnel" subtitle="From raw news to rounds worth researching — all counts live">
+        <ol className="grid gap-3 sm:grid-cols-4">
+          {[
+            ["Unique articles", funnel.articles, "/discoveries?window=all"],
+            ["Funding stories (AI triage)", funnel.funding, "/discoveries?window=all"],
+            ["Rounds filtered out by rules", funnel.filtered, "/rounds/filtered"],
+            ["Rounds that passed", funnel.rounds_pass, "/rounds"],
+          ].map(([label, value, href], i) => (
+            <li key={label as string}>
+              <Link href={href as string} className="block rounded-xl bg-sunken/60 px-4 py-3 hover:bg-sunken">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-faint">Step {i + 1}</p>
+                <p className="mt-1 font-display text-3xl tabular-nums">{value as number}</p>
+                <p className="text-xs text-muted">{label as string}</p>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">

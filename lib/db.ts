@@ -13,6 +13,8 @@ export function db(): postgres.Sql {
       idle_timeout: 20,
       connect_timeout: 15,
       onnotice: () => {},
+      // Return SQL dates as plain YYYY-MM-DD strings (no timezone shifting).
+      types: { date: { to: 1082, from: [1082], serialize: (x: string) => x, parse: (x: string) => x } },
     });
   }
   return globalForDb.sql;

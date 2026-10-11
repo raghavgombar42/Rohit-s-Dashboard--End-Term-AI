@@ -83,3 +83,67 @@ export async function sourceHealth() {
     from sources s left join articles a on a.source_id = s.id and not a.is_replay
     group by s.id order by s.enabled desc, total desc`;
 }
+
+export type RoundRow = {
+  id: string;
+  startup_id: string;
+  name: string;
+  domain: string | null;
+  hq_city: string | null;
+  country: string | null;
+  description: string | null;
+  founders: { name: string; role: string | null }[];
+  needs_review: boolean;
+  stage: string;
+  stage_basis: string | null;
+  amount_text: string | null;
+  announced_on: string;
+  date_source: string;
+  recency_lane: "fresh" | "late_catch";
+  age_hours_at_discovery: string | null;
+  investors: string[];
+  evidence: Record<string, unknown> & { notes?: string[] };
+  status: string;
+  status_reason: string | null;
+  created_at: Date;
+  sources: { title: string; url: string; publisher: string | null; published_at: Date | null }[];
+};
+
+export async function listRounds(limit = 100) {
+  return db()<RoundRow[]>`
+    select r.id, s.id as startup_id, s.name, s.domain, s.hq_city, s.country, s.description, s.founders, s.needs_review,
+           r.stage, r.stage_basis, r.amount_text, r.announced_on, r.date_source, r.recency_lane, r.age_hours_at_discovery,
+           r.investors, r.evidence, r.status, r.status_reason, r.created_at,
+           coalesce((select json_agg(json_build_object('title', a.title, 'url', a.url, 'publisher', a.publisher, 'published_at', a.published_at)
+                                     order by a.published_at)
+                     from round_sources rs join articles a on a.id = rs.article_id where rs.round_id = r.id), '[]') as sources
+    from funding_rounds r join startups s on s.id = r.startup_id
+    where not r.is_replay
+    order by r.announced_on desc, r.id desc
+    limit ${limit}`;
+}
+
+export type FilteredRow = { article_id: string; title: string; url: string; publisher: string | null; published_at: Date | null; startup: string; outcome: string; notes: string[] | null };
+
+/** Every per-round decision the rules made against, from the extraction audit trail. */
+export async function listFilteredOut(limit = 200) {
+  return db()<FilteredRow[]>`
+    select a.id as article_id, a.title, a.url, a.publisher, a.published_at,
+           x->>'startup' as startup, x->>'outcome' as outcome,
+           (select array_agg(n) from jsonb_array_elements_text(x->'notes') n) as notes
+    from articles a, jsonb_array_elements(a.extraction->'rounds') x
+    where a.extraction is not null and x->>'outcome' like 'rejected:%' and not a.is_replay
+    order by a.published_at desc nulls last
+    limit ${limit}`;
+}
+
+export async function funnelCounts() {
+  const [row] = await db()<{ articles: number; funding: number; rounds_pass: number; rounds_fresh: number; filtered: number }[]>`
+    select
+      (select count(*) from articles where not is_replay and (reject_reason is null or reject_reason not like 'duplicate_of:%'))::int as articles,
+      (select count(*) from articles where not is_replay and status in ('candidate','linked','rejected') and (reject_reason is null or reject_reason not like 'duplicate_of:%'))::int as funding,
+      (select count(*) from funding_rounds where not is_replay)::int as rounds_pass,
+      (select count(*) from funding_rounds where not is_replay and recency_lane = 'fresh')::int as rounds_fresh,
+      (select count(*) from articles a, jsonb_array_elements(a.extraction->'rounds') x where x->>'outcome' like 'rejected:%')::int as filtered`;
+  return row;
+}
