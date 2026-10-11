@@ -26,11 +26,11 @@ export default async function DiscoveriesPage({ searchParams }: PageProps<"/disc
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {WINDOWS.map(([k, label]) => (
-          <Link key={k} href={href({ window: k })} className={`rounded-full px-3 py-1.5 text-xs font-medium ${f.window === k ? "bg-ink text-white" : "border border-line bg-surface text-muted hover:text-ink"}`}>{label}</Link>
+          <Link key={k} href={href({ window: k })} className={`rounded-full px-3 py-1.5 text-xs font-medium ${f.window === k ? "bg-accent text-white shadow-sm shadow-violet-500/30" : "border border-line bg-surface text-muted hover:text-ink"}`}>{label}</Link>
         ))}
         <span className="mx-2 h-4 w-px bg-line" />
         {VIEWS.map(([k, label]) => (
-          <Link key={k} href={href({ view: k })} className={`rounded-full px-3 py-1.5 text-xs font-medium ${f.view === k ? "bg-ink text-white" : "border border-line bg-surface text-muted hover:text-ink"}`}>{label}</Link>
+          <Link key={k} href={href({ view: k })} className={`rounded-full px-3 py-1.5 text-xs font-medium ${f.view === k ? "bg-accent text-white shadow-sm shadow-violet-500/30" : "border border-line bg-surface text-muted hover:text-ink"}`}>{label}</Link>
         ))}
         <span className="ml-auto text-xs text-muted">{rows.length} article{rows.length === 1 ? "" : "s"}</span>
       </div>

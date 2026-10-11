@@ -134,3 +134,19 @@ test("context-inferred country is accepted", () => {
   const g = applyGates({ round: { ...v0, country: "India", country_basis: "inferred_from_context" }, publishedAt: null, discoveredAt: new Date() }, thesis);
   assert.equal(g.failures.some((f) => f.startsWith("geography")), false);
 });
+
+import { quoteSupported } from "../lib/funding/verify";
+const LORAZZO = "The brand has grown its revenue six times over the past 12 months and is targeting Rs 100 crore in revenue over the next two years. Bareback Media has recently invested.";
+
+test("near-verbatim: a quote with two words trimmed is supported", () => {
+  assert.ok(quoteSupported("The brand has grown its revenue six times over the past 12 months and is targeting Rs 100 crore over the next two years.", LORAZZO));
+});
+
+test("near-verbatim: an invented sentence that only shares an opening is rejected", () => {
+  const src = "ReFit Global operates across refurbishment, distribution, retail and related consumer services in India.";
+  assert.equal(quoteSupported("ReFit Global operates an integrated re-commerce platform offering certified refurbished and pre-owned electronics through omnichannel retail and distribution networks.", src), false);
+});
+
+test("near-verbatim: changed numbers fail (Rs 100 crore → Rs 500 crore with other words trimmed)", () => {
+  assert.equal(quoteSupported("grown its revenue ten times over the past 24 months and is targeting Rs 500 crore", LORAZZO), false);
+});

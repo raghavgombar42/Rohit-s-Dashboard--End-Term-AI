@@ -11,7 +11,7 @@ import { GEMINI_MODEL, env } from "./env";
  * - Retries with exponential backoff on 429/5xx/invalid JSON. Every call is logged to llm_calls.
  */
 
-export type Purpose = "triage" | "extract" | "research" | "fit" | "email";
+export type Purpose = "triage" | "extract" | "website" | "research" | "fit" | "email";
 export type Thinking = "MINIMAL" | "LOW" | "MEDIUM";
 
 type Usage = { tokensIn: number; tokensOut: number; latencyMs: number };
@@ -74,6 +74,8 @@ export async function generateJSON<S extends z.ZodType>(opts: {
   runId?: number | null;
   maxOutputTokens?: number;
   maxAttempts?: number;
+  /** Let Gemini use Google Search. Its output is still treated as a proposal and verified by code. */
+  googleSearch?: boolean;
 }): Promise<{ data: z.infer<S>; usage: Usage }> {
   const model = GEMINI_MODEL();
   const responseJsonSchema = toGeminiSchema(opts.schema);
@@ -96,6 +98,7 @@ export async function generateJSON<S extends z.ZodType>(opts: {
           // Thinking tokens count against the output budget; keep it generous so JSON is never cut off.
           maxOutputTokens: opts.maxOutputTokens ?? 8192,
           thinkingConfig: { thinkingLevel: ThinkingLevel[opts.thinking ?? "LOW"] },
+          ...(opts.googleSearch ? { tools: [{ googleSearch: {} }] } : {}),
         },
       });
       const usage: Usage = {

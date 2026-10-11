@@ -53,3 +53,78 @@ ${a.title}
 ${a.text}
 </article>`;
 }
+
+// ---------- M5: research and fit ----------
+
+export const RESEARCH_PROMPT_VERSION = { website: "website-v1", research: "research-v1", fit: "fit-v1" } as const;
+
+export const WEBSITE_SYSTEM = `You find the official website of a startup. Use Google Search.
+Return up to 3 candidate URLs (homepage of the company itself, not news, LinkedIn, Crunchbase or app stores), best first.
+If you cannot find one, return an empty list. Every URL will be fetched and checked automatically.`;
+
+export const RESEARCH_SYSTEM = `You write a short, factual research brief about a startup for an accelerator recruiter.
+You receive numbered sources: A* are news articles about its funding, W* are pages from its own website.
+
+Rules:
+1. Use only the sources. No outside knowledge, no guesses.
+2. Every fact needs the id of its source and a VERBATIM quote (exact words, max ~200 characters) from that source.
+   Quotes are checked by string matching; facts with paraphrased quotes are discarded.
+3. Prefer specific, useful facts: what they sell, to whom, traction numbers, team background, what the new money is for.
+4. If something is unknown, leave it out (or null). It is fine to return few facts.
+
+${DATA_RULE}`;
+
+export const FIT_SYSTEM = `You assess how well a freshly funded startup fits an accelerator's investment thesis.
+Score each criterion from 0 (no fit / no evidence) to 10 (perfect fit, strong evidence), as an integer.
+
+Rules:
+1. Judge only from the provided sources and research brief. No outside knowledge.
+2. evidence must be a VERBATIM fragment copied from the sources. It is checked by string matching; a criterion whose
+   evidence cannot be found scores 0. If nothing supports a criterion, give a low score and evidence null.
+3. excluded_sector_match: pick an excluded sector only if the startup PRIMARILY operates in it; otherwise "none".
+4. Be calibrated: a fintech for Indian consumers is a strong sector fit; an enterprise SaaS tool is not, even if it
+   mentions payments. Do not reward hype words.
+
+${DATA_RULE}`;
+
+export type SourceDoc = { id: string; kind: "article" | "website"; url: string; title: string; text: string };
+
+export function sourcesBlock(sources: SourceDoc[]) {
+  return sources.map((s) => `<page id="${s.id}" kind="${s.kind}" url="${s.url}">\n${s.title}\n${s.text}\n</page>`).join("\n\n");
+}
+
+export function websitePrompt(r: { name: string; city: string | null; oneLiner: string | null; investors: string[] }) {
+  return `Startup: ${r.name}${r.city ? `, based in ${r.city}, India` : ", India"}.
+What it does (from news): ${r.oneLiner ?? "unknown"}. Recent investors: ${r.investors.join(", ") || "unknown"}.
+Find its official website.`;
+}
+
+export function researchPrompt(name: string, sources: SourceDoc[]) {
+  return `Startup: ${name}\n\nSources:\n${sourcesBlock(sources)}`;
+}
+
+export function fitPrompt(input: {
+  thesis: { summary: string; sectors: string[]; excluded_sectors: string[]; business_models: string[]; criteria: Record<string, { description: string }> };
+  round: { name: string; stage: string; amount: string | null; city: string | null; investors: string[] };
+  brief: unknown;
+  sources: SourceDoc[];
+}) {
+  const t = input.thesis;
+  return `ACCELERATOR THESIS
+What we look for: ${t.summary}
+Target sectors: ${t.sectors.join("; ")}
+Excluded sectors: ${t.excluded_sectors.join("; ") || "none"}
+Preferred business models: ${t.business_models.join(", ")}
+Criteria to score:
+${Object.entries(t.criteria).map(([k, c]) => `- ${k}: ${c.description}`).join("\n")}
+
+STARTUP
+${input.round.name} · ${input.round.stage} round${input.round.amount ? ` of ${input.round.amount}` : ""}${input.round.city ? ` · ${input.round.city}` : ""}
+Investors: ${input.round.investors.join(", ") || "not named"}
+
+RESEARCH BRIEF (verified facts)
+${JSON.stringify(input.brief, null, 1)}
+
+SOURCES
+${sourcesBlock(input.sources)}`;
+}

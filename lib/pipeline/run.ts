@@ -3,6 +3,7 @@ import { createContext, type RunContext, type RunTrigger } from "./context";
 import { ingestStage } from "./ingest";
 import { triageStage } from "./triage";
 import { extractStage } from "./extract";
+import { assessStage, rescoreUndrafted } from "./assess";
 
 type Stage = { name: string; run: (ctx: RunContext) => Promise<void> };
 
@@ -12,6 +13,9 @@ const STAGES: Stage[] = [
   { name: "ingest", run: ingestStage },
   { name: "triage", run: triageStage },
   { name: "extract", run: extractStage },
+  { name: "assess", run: assessStage },
+  // Thesis edited since a round was scored? Re-score it (only if not drafted/contacted yet).
+  { name: "rescore", run: rescoreUndrafted },
 ];
 
 const STALE_LOCK_MINUTES = 10;

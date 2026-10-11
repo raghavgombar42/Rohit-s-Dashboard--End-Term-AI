@@ -189,3 +189,33 @@ export function applyGates(input: GateInput, thesis: GateThesis): GateResult {
     ageHours: Math.round(ageHours * 10) / 10,
   };
 }
+
+// ---------- Near-verbatim evidence (used for fit-score evidence and research facts) ----------
+
+const words = (s: string) => normalizeForMatch(s).replace(/[^a-z0-9₹$%.' -]+/g, " ").split(/\s+/).filter(Boolean);
+
+/**
+ * True when the quote appears verbatim, or when ≥ minRatio of its words occur IN ORDER inside one
+ * passage of the source no longer than 1.5× the quote. Tolerates a model trimming a few words
+ * ("Rs 100 crore over…" vs "Rs 100 crore in revenue over…") but rejects invented sentences.
+ */
+export function quoteSupported(quote: string | null | undefined, source: string, minRatio = 0.9): boolean {
+  if (!quote) return false;
+  if (quoteFound(quote, source)) return true;
+  const q = words(quote);
+  if (q.length < 6) return false; // short quotes must match exactly
+  const s = words(source);
+  const maxSpan = Math.ceil(q.length * 1.5);
+  const need = Math.ceil(q.length * minRatio);
+  for (let start = 0; start < s.length; start++) {
+    if (s[start] !== q[0] && s[start] !== q[1]) continue;
+    let qi = s[start] === q[0] ? 0 : 1;
+    let matched = 0;
+    for (let si = start; si < Math.min(s.length, start + maxSpan) && qi < q.length; si++) {
+      if (s[si] === q[qi]) { matched++; qi++; }
+      else if (qi + 1 < q.length && s[si] === q[qi + 1]) { matched++; qi += 2; } // quote word missing from source
+    }
+    if (matched >= need) return true;
+  }
+  return false;
+}

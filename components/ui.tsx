@@ -5,7 +5,7 @@ export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?:
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-2xl">
         {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">{eyebrow}</p>}
-        <h1 className="mt-1 font-display text-4xl leading-tight tracking-tight">{title}</h1>
+        <h1 className="mt-1 font-display text-[2.6rem] leading-tight tracking-tight">{title}</h1>
         {description && <p className="mt-2 text-[15px] leading-relaxed text-muted">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
@@ -49,12 +49,26 @@ export function Badge({ tone = "neutral", children, dot }: { tone?: Tone; childr
   );
 }
 
-export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: ReactNode }) {
+const STAT_TONES = {
+  violet: { bar: "from-violet-500 to-fuchsia-500", chip: "bg-violet-100 text-violet-700" },
+  sky: { bar: "from-sky-500 to-cyan-400", chip: "bg-sky-100 text-sky-700" },
+  emerald: { bar: "from-emerald-500 to-teal-400", chip: "bg-emerald-100 text-emerald-700" },
+  amber: { bar: "from-amber-500 to-orange-400", chip: "bg-amber-100 text-amber-700" },
+  pink: { bar: "from-pink-500 to-rose-400", chip: "bg-pink-100 text-pink-700" },
+} as const;
+export type StatTone = keyof typeof STAT_TONES;
+
+export function Stat({ label, value, hint, tone = "violet", icon }: { label: string; value: ReactNode; hint?: ReactNode; tone?: StatTone; icon?: ReactNode }) {
+  const t = STAT_TONES[tone];
   return (
-    <div className="rounded-2xl border border-line bg-surface px-5 py-4">
-      <p className="text-xs font-medium text-muted">{label}</p>
+    <div className="relative overflow-hidden rounded-2xl border border-line bg-surface px-5 py-4 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+      <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${t.bar}`} />
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-muted">{label}</p>
+        {icon && <span className={`grid h-7 w-7 place-items-center rounded-lg text-sm ${t.chip}`}>{icon}</span>}
+      </div>
       <p className={typeof value === "number" ? "mt-1.5 font-display text-4xl leading-none tabular-nums" : "mt-2 text-2xl font-semibold leading-none tracking-tight"}>{value}</p>
-      {hint && <p className="mt-2 text-xs text-faint">{hint}</p>}
+      {hint && <div className="mt-2 text-xs text-faint">{hint}</div>}
     </div>
   );
 }

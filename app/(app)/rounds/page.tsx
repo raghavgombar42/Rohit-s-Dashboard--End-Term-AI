@@ -109,7 +109,7 @@ export default async function RoundsPage() {
       <PageHeader
         eyebrow="Steps 2–4 · Extraction, verification, rules"
         title="Funding rounds"
-        description="Rounds Gemini extracted from the articles that passed every hard rule: a pre-seed/seed/angel stage, an Indian startup, newly announced, inside the outreach window. Each fact is backed by a verbatim quote that code checked against the source."
+        description="Rounds that passed every hard rule (pre-seed/seed/angel, Indian, newly announced, inside the outreach window) and are qualified or still in the queue. Each fact is backed by a verbatim quote that code checked against the source. Rounds that failed the thesis fit move to the audit tab."
       />
       <RoundTabs active="passed" />
       {rounds.length === 0 ? (

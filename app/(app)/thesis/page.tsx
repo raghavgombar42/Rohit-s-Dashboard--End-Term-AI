@@ -24,7 +24,7 @@ export default async function ThesisPage() {
         description="This thesis lives in Supabase (table “thesis”, row 1). Every edit is validated, versioned and snapshotted by the database itself. The next scoring run uses it with no code change or deploy. Past assessments keep the version they were scored with."
         actions={
           editor && (
-            <a href={editor} target="_blank" rel="noreferrer" className="rounded-lg bg-ink px-3.5 py-2 text-sm font-medium text-white hover:bg-ink/85">
+            <a href={editor} target="_blank" rel="noreferrer" className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-violet-500/25 hover:opacity-90">
               Edit in Supabase ↗
             </a>
           )
@@ -61,7 +61,7 @@ export default async function ThesisPage() {
                     <span className="font-medium">{key.replaceAll("_", " ")}</span>
                     <span className="text-xs text-muted tabular-nums">{pct}%</span>
                   </div>
-                  <div className="mt-1.5 h-1.5 rounded-full bg-sunken"><div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} /></div>
+                  <div className="mt-1.5 h-1.5 rounded-full bg-sunken"><div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: `${pct}%` }} /></div>
                   <p className="mt-1.5 text-xs leading-relaxed text-muted">{c.description}</p>
                 </li>
               );

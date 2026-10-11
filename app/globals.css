@@ -1,23 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8f6f1;
+  --background: #f3f5fb;
   --surface: #ffffff;
-  --sunken: #f1eee7;
-  --ink: #15171b;
-  --muted: #6a6e75;
-  --faint: #9a9da3;
-  --line: #e6e1d7;
-  --accent: #c2410c;      /* forge ember */
-  --accent-soft: #fdeee6;
-  --good: #15803d;
-  --good-soft: #e8f5ec;
-  --warn: #a16207;
-  --warn-soft: #fbf3dc;
-  --bad: #b42318;
-  --bad-soft: #fdecea;
-  --info: #1d4ed8;
-  --info-soft: #e8eefc;
+  --sunken: #eef1f8;
+  --ink: #0f172a;
+  --muted: #55607a;
+  --faint: #94a0b8;
+  --line: #e2e7f1;
+  --accent: #5b4cf0;        /* indigo-violet */
+  --accent-soft: #eeecff;
+  --brand-1: #1e1b4b;       /* header gradient */
+  --brand-2: #3b2a8c;
+  --brand-3: #6d28d9;
+  --good: #059669;
+  --good-soft: #e3f8ef;
+  --warn: #c2620a;
+  --warn-soft: #fff1df;
+  --bad: #e11d48;
+  --bad-soft: #ffe8ee;
+  --info: #0284c7;
+  --info-soft: #e2f3fd;
+  --pink: #db2777;
+  --pink-soft: #fde8f3;
 }
 
 @theme inline {
@@ -30,6 +35,9 @@
   --color-line: var(--line);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-brand-1: var(--brand-1);
+  --color-brand-2: var(--brand-2);
+  --color-brand-3: var(--brand-3);
   --color-good: var(--good);
   --color-good-soft: var(--good-soft);
   --color-warn: var(--warn);
@@ -38,6 +46,8 @@
   --color-bad-soft: var(--bad-soft);
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
+  --color-pink: var(--pink);
+  --color-pink-soft: var(--pink-soft);
   --font-sans: var(--font-inter);
   --font-display: var(--font-serif);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -52,4 +62,18 @@ body {
 
 ::selection {
   background: var(--accent-soft);
+}
+
+.brand-gradient {
+  background:
+    radial-gradient(1200px 300px at 85% -40%, rgba(236, 72, 153, 0.35), transparent 60%),
+    radial-gradient(900px 260px at 10% 120%, rgba(56, 189, 248, 0.22), transparent 60%),
+    linear-gradient(115deg, var(--brand-1) 0%, var(--brand-2) 55%, var(--brand-3) 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, #5b4cf0, #c026d3 60%, #f43f5e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

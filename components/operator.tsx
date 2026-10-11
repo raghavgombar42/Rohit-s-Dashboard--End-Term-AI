@@ -13,19 +13,19 @@ export async function OperatorControl() {
     return (
       <form action="/api/operator" method="post" className="flex items-center gap-2">
         <input type="hidden" name="intent" value="lock" />
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-good-soft px-2.5 py-1 text-xs font-medium text-good">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/20 px-2.5 py-1 text-xs font-medium text-emerald-200 ring-1 ring-emerald-300/30">
           <span className="h-1.5 w-1.5 rounded-full bg-current" /> Operator mode
         </span>
-        <button className="text-xs text-muted underline-offset-2 hover:underline">Lock</button>
+        <button className="text-xs text-white/70 underline-offset-2 hover:text-white hover:underline">Lock</button>
       </form>
     );
   }
   return (
     <OperatorPopover>
-      <summary className="cursor-pointer list-none rounded-full border border-line px-2.5 py-1 text-xs text-muted hover:text-ink">
+      <summary className="cursor-pointer list-none rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/85 ring-1 ring-white/20 hover:bg-white/20">
         View-only · Unlock
       </summary>
-      <form action="/api/operator" method="post" className="absolute right-0 z-20 mt-2 w-64 rounded-xl border border-line bg-surface p-4 shadow-lg">
+      <form action="/api/operator" method="post" className="absolute right-0 z-20 mt-2 w-64 rounded-xl border border-line bg-surface p-4 text-ink shadow-xl">
         <input type="hidden" name="intent" value="unlock" />
         <p className="text-xs leading-relaxed text-muted">
           Operator mode enables actions with side effects (running the pipeline, approving or rejecting drafts).
@@ -38,7 +38,7 @@ export async function OperatorControl() {
           className="mt-3 w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-accent"
         />
         <OperatorDenied />
-        <button className="mt-2 w-full rounded-lg bg-ink px-3 py-2 text-sm font-medium text-white hover:bg-ink/85">Unlock</button>
+        <button className="mt-2 w-full rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white hover:opacity-90">Unlock</button>
       </form>
     </OperatorPopover>
   );

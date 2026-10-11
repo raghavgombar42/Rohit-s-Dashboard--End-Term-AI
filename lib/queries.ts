@@ -118,7 +118,7 @@ export async function listRounds(limit = 100) {
                                      order by a.published_at)
                      from round_sources rs join articles a on a.id = rs.article_id where rs.round_id = r.id), '[]') as sources
     from funding_rounds r join startups s on s.id = r.startup_id
-    where not r.is_replay
+    where not r.is_replay and r.status <> 'not_qualified' -- non-fits are audit-only (PDF: Rohit never sees them)
     order by r.announced_on desc, r.id desc
     limit ${limit}`;
 }
@@ -138,12 +138,48 @@ export async function listFilteredOut(limit = 200) {
 }
 
 export async function funnelCounts() {
-  const [row] = await db()<{ articles: number; funding: number; rounds_pass: number; rounds_fresh: number; filtered: number }[]>`
+  const [row] = await db()<{ articles: number; funding: number; rounds_pass: number; rounds_fresh: number; filtered: number; qualified: number; not_fit: number }[]>`
     select
       (select count(*) from articles where not is_replay and (reject_reason is null or reject_reason not like 'duplicate_of:%'))::int as articles,
       (select count(*) from articles where not is_replay and status in ('candidate','linked','rejected') and (reject_reason is null or reject_reason not like 'duplicate_of:%'))::int as funding,
       (select count(*) from funding_rounds where not is_replay)::int as rounds_pass,
       (select count(*) from funding_rounds where not is_replay and recency_lane = 'fresh')::int as rounds_fresh,
-      (select count(*) from articles a, jsonb_array_elements(a.extraction->'rounds') x where x->>'outcome' like 'rejected:%')::int as filtered`;
+      (select count(*) from articles a, jsonb_array_elements(a.extraction->'rounds') x where x->>'outcome' like 'rejected:%')::int as filtered,
+      (select count(*) from funding_rounds where not is_replay and status in ('qualified','drafted'))::int as qualified,
+      (select count(*) from funding_rounds where not is_replay and status = 'not_qualified')::int as not_fit`;
   return row;
+}
+
+export type ScoredCriterionRow = { score: number; ai_score: number; weight: number; evidence: string | null; evidence_verified: boolean; reasoning: string };
+export type ResearchFact = { category: string; claim: string; source_id: string; quote: string; source_url: string };
+export type AssessedRow = RoundRow & {
+  total: string;
+  qualified: boolean;
+  summary: string | null;
+  thesis_version: number;
+  gate_failures: string[];
+  criteria_scores: Record<string, ScoredCriterionRow> & { _meta?: { primary_sector?: string; business_model?: string } };
+  research: {
+    one_liner: string; product: string | null; customers: string | null; business_model: string;
+    facts: ResearchFact[]; facts_dropped: number;
+    website: { url: string; method: string } | null;
+    sources: { id: string; kind: string; url: string; title: string }[];
+  } | null;
+  assessed_at: Date;
+};
+
+/** Latest assessment per round. qualified=true → Rohit's view; false → audit only. */
+export async function listAssessed(qualified: boolean, limit = 100) {
+  return db()<AssessedRow[]>`
+    select r.id, s.id as startup_id, s.name, s.domain, s.hq_city, s.country, s.description, s.founders, s.needs_review,
+           r.stage, r.stage_basis, r.amount_text, r.announced_on, r.date_source, r.recency_lane, r.age_hours_at_discovery,
+           r.investors, r.evidence, r.status, r.status_reason, r.created_at, r.research,
+           '[]'::json as sources,
+           a.total, a.qualified, a.summary, a.thesis_version, a.gate_failures, a.criteria_scores, a.created_at as assessed_at
+    from funding_rounds r
+    join startups s on s.id = r.startup_id
+    join lateral (select * from assessments x where x.round_id = r.id order by x.id desc limit 1) a on true
+    where not r.is_replay and a.qualified = ${qualified}
+    order by a.total desc
+    limit ${limit}`;
 }
