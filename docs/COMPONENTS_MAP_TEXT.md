@@ -4,7 +4,20 @@ Everything below describes the system **as built and live** (12 Oct 2026). Do no
 
 ---
 
-## Prompt to paste into ChatGPT
+## Revision prompt — paste into the SAME ChatGPT chat that made components-map-a3-landscape.pdf
+
+> The content is correct; keep every word exactly as it is. Please fix only the presentation and re-export the A3 landscape PDF and a high-resolution PNG:
+> 1. **Step numbers overlap the text** (e.g. card 1 reads "1g cron…"). Put each number in its own small filled circle badge at the top-left of the card, with the card text starting on the line below. Make the badges bold and coloured to match the card's border.
+> 2. **The ✕ symbol did not render**, so the "Cut" lines start with a blank. Replace every ✕ with the word **"NEVER:"** in bold red at the start of that line, using plain characters only.
+> 3. **Cards are stretched to fill tall rows**, leaving empty boxes with tiny text. Make every card hug its content: no fixed heights, and stack multiple cards in a cell with small gaps. Size each row to its tallest content.
+> 4. **Text is too small to read when printed.** Card body at least 9.5 pt, actor labels 11 pt bold, column headers 10 pt. If space is short, reduce padding, not font size.
+> 5. **Remove the scattered dashed connector lines.** Instead, add one thin "Reading order" strip under the title: *"1 Schedule → 2 Run lock → 3 Fetch news → 4 Dedup → 5 Triage → 6 Extract → 7 Verify + gates → 8 Identity → 9 Website → 10 Research → 10a Thesis → 11 Fit score → 12 Decide → 13 Contact → 14 Write → 15 Validate → 16 Gmail draft → 17 Rohit reviews → 18 Send once → 19 History"*.
+> 6. Move the colour legend to directly under the title, left-aligned, at a readable size.
+> Keep the three note boxes and the footer. Don't add, remove or reword any content.
+
+---
+
+## Prompt to paste into ChatGPT (first-time generation)
 
 > Create a **landscape A3 swimlane "Components Map" diagram** as a high-resolution image (and also export it as a one-page PDF), in the style of a clean consulting slide.
 >
@@ -13,7 +26,7 @@ Everything below describes the system **as built and live** (12 Oct 2026). Do no
 > - Subtitle: **"Mesa C4 · AI Final · Problem Statement 6 (Hard) · as built and live, 12 Oct 2026"**
 > - A grid with **8 actor rows** (labels on a dark navy/indigo left rail) and **6 stage columns** across the top, in this order: **Trigger · Input · Context · Processing · AI · Output** (dark header bar, small uppercase labels).
 > - Put each numbered card in the cell (row × column) I specify. Alternate light row backgrounds. Use dashed arrows following the step numbers (0 → 19).
-> - **Card colours (legend at top):** pink/magenta border = AI judgement (Gemini) · indigo/blue border = deterministic code · teal border = data, database & external APIs · orange border = a person acts. Lines starting with "✕" are "The Cut" and go in small red text at the bottom of the card.
+> - **Card colours (legend at top):** pink/magenta border = AI judgement (Gemini) · indigo/blue border = deterministic code · teal border = data, database & external APIs · orange border = a person acts. Lines starting with "NEVER:" are "The Cut" and go in small bold red text at the bottom of the card.
 > - Under the grid, three side-by-side note boxes: **"The Cut"** (red-tinted), **"AI proposes, code decides"** and **"Running cost"**.
 > - Fonts: a modern sans-serif for body text, an elegant serif for the title. Keep every card's text exactly as given (you may shorten line breaks, but **do not change, add or invent wording, numbers or components**). Readable at 100% zoom.
 >
@@ -26,7 +39,7 @@ Everything below describes the system **as built and live** (12 Oct 2026). Do no
 **Row 1 — Rohit** (recruitment lead · Tandem Forge, a fictional accelerator)
 - Trigger · *orange* · **0** — Optional "Run now" from the dashboard (operator mode).
 - Context · *orange* · **T** — Edits the thesis row in the Supabase Table Editor (sectors, exclusions, criteria, weights, threshold). No code, no deploy.
-- Output · *orange* · **17** — Reviews each draft in Gmail or the dashboard: edits, Approve & send, or Reject with a reason. ✕ nothing is ever sent without him
+- Output · *orange* · **17** — Reviews each draft in Gmail or the dashboard: edits, Approve & send, or Reject with a reason. NEVER: nothing is ever sent without him
 
 **Row 2 — Scheduler** (Supabase pg_cron · Vercel Cron)
 - Trigger · *teal* · **1** — pg_cron fires hourly and calls the pipeline with a secret kept in Supabase Vault. Vercel Cron runs daily as a backup.
@@ -47,7 +60,7 @@ Everything below describes the system **as built and live** (12 Oct 2026). Do no
 - AI · *pink* · **6** — Extract every round in the article: startup, stage, amount, date, investors, founders, each with a verbatim quote.
 - AI · *pink* · **10** — Research brief from fetched pages only; every fact cites its source and quote.
 - AI · *pink* · **11** — Fit score 0–10 per thesis criterion with evidence. Never sees the weights or the threshold.
-- AI · *pink* · **14** — Writes the email from verified facts only. ✕ no invented claims or numbers
+- AI · *pink* · **14** — Writes the email from verified facts only. NEVER: no invented claims or numbers
 
 **Row 6 — Database** (Supabase Postgres)
 - Context · *teal* · **10a** — Reads the thesis fresh at scoring time. A trigger validates every edit, bumps the version and snapshots it; each assessment stores the version it used.
@@ -56,10 +69,10 @@ Everything below describes the system **as built and live** (12 Oct 2026). Do no
 
 **Row 7 — Startup web** (company websites · Hunter.io)
 - Context · *teal* · **9** — Website: Gemini + Google Search proposes up to 3 URLs; code accepts one only if it loads and shows the startup's name. Homepage and About pages fetched.
-- Context · *teal* · **13** — Contact: email published on the startup's own site, else a Hunter.io founder match verified as deliverable. ✕ never guesses firstname@domain
+- Context · *teal* · **13** — Contact: email published on the startup's own site, else a Hunter.io founder match verified as deliverable. NEVER: never guesses firstname@domain
 
 **Row 8 — Gmail** (rohit.guptaa1141@gmail.com)
-- Output · *teal* · **16** — Draft appears in Rohit's Drafts folder (OAuth, compose-only permission, token encrypted). Drafts he sends or deletes in Gmail are detected on the next run. ✕ safe mode: every email goes to a test inbox
+- Output · *teal* · **16** — Draft appears in Rohit's Drafts folder (OAuth, compose-only permission, token encrypted). Drafts he sends or deletes in Gmail are detected on the next run. NEVER: safe mode: every email goes to a test inbox
 
 ---
 
