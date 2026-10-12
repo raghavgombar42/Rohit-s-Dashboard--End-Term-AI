@@ -28,7 +28,7 @@ const globalForDb = globalThis as unknown as { sql?: Sql };
 export function db(): Sql {
   const scoped = requestScope.getStore();
   if (scoped) return scoped;
-  if (!globalForDb.sql) globalForDb.sql = postgres(env("DATABASE_URL"), { ...OPTIONS, max: 3, idle_timeout: 20, max_lifetime: 60 * 5 });
+  if (!globalForDb.sql) globalForDb.sql = postgres(env("DATABASE_URL"), { ...OPTIONS, max: 8, idle_timeout: 20, max_lifetime: 60 * 5 });
   return globalForDb.sql;
 }
 
@@ -50,7 +50,10 @@ function isConnectionProblem(e: unknown): boolean {
  */
 export async function resilient<T>(load: () => Promise<T>, timeoutMs = 8000): Promise<T> {
   for (let attempt = 0; attempt < 2; attempt++) {
-    const sql = postgres(env("DATABASE_URL"), { ...OPTIONS, max: 3, idle_timeout: 0 });
+    // max must exceed the number of queries a page runs in parallel (Overview: 9). With fewer sockets,
+    // postgres.js pipelines several queries on one socket, which Supabase's transaction pooler cannot
+    // handle: that was the production hang. Sockets open lazily, only as needed.
+    const sql = postgres(env("DATABASE_URL"), { ...OPTIONS, max: 12, idle_timeout: 0 });
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       return await Promise.race([
