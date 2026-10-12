@@ -95,10 +95,12 @@ npm run pipeline                # one pipeline run from the CLI
 ## Tests
 
 ```bash
-npm test                                                         # 39 unit tests
+npm test                                                         # 42 unit tests
 npx tsx --env-file=.env.local tests/db-guarantees.check.mts      # 10 DB-constraint checks (rolled back)
 npx tsx --env-file=.env.local tests/run-lock.check.mts           # concurrent runs → one skipped
-npx tsx --env-file=.env.local tests/gmail-e2e.check.mts          # live Gmail: drafts, send-once, reject, closed-in-Gmail, no duplicates
+npx tsx --env-file=.env.local tests/gmail-e2e.check.mts          # live Gmail: drafts, send-once, reject, closed-in-Gmail, no duplicates (sends 1 test email)
+npx tsx --env-file=.env.local tests/gmail-readonly.check.mts     # read-only: token works, drafts exist in Gmail, no duplicate outreach
+npx tsx --env-file=.env.local tests/openrouter-smoke.check.mts   # all 6 AI call types through OpenRouter (Google-only)
 ```
 
 Unit tests cover:
