@@ -1,69 +1,69 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import postgres from "postgres";
 import { env } from "./env";
 
-// One pooled client per server instance, connected through Supabase's SESSION pooler (port 5432).
-// (The transaction pooler on 6543 hung with postgres.js pipelining in production, see DECISIONS.md.)
+// Serverless lesson (seen in production): pooled sockets kept between requests go stale when Vercel
+// freezes an instance. With the transaction pooler a stale socket made queries hang until the 300 s
+// function limit; with the session pooler frozen instances leaked slots until "max clients reached".
 //
-// Serverless hazard (seen in production): Vercel can freeze an instance while a connection is
-// mid-conversation with the pooler; a later request that picks that stale connection waits forever.
-// Mitigations: short-lived connections, TCP keep-alive, a small pool, and `resilient()` below,
-// which times out a page's data load, throws the whole pool away and retries once on fresh sockets.
-const globalForDb = globalThis as unknown as { sql?: postgres.Sql };
+// So page loads never reuse sockets: `resilient()` opens a fresh, request-scoped client, runs the page's
+// queries on it, and closes it when the page is done. Code outside a page load (pipeline runs, scripts)
+// uses one long-lived client per invocation. DATABASE_URL on Vercel = Supabase transaction pooler (6543),
+// which accepts many short-lived clients; prepare: false is required there.
 
-function create(): postgres.Sql {
-  return postgres(env("DATABASE_URL"), {
-    prepare: false,
-    max: 2, // session pooler allows ~15 clients in total across all instances: hold few, release fast
-    idle_timeout: 3, // seconds: give pooler slots back almost immediately after a request
-    max_lifetime: 60 * 5, // seconds: recycle every connection regularly
-    connect_timeout: 10,
-    keep_alive: 15, // TCP keep-alive to detect dead sockets sooner
-    onnotice: () => {},
-    // Return SQL dates as plain YYYY-MM-DD strings (no timezone shifting).
-    types: { date: { to: 1082, from: [1082], serialize: (x: string) => x, parse: (x: string) => x } },
-  });
-}
+type Sql = postgres.Sql;
 
-export function db(): postgres.Sql {
-  if (!globalForDb.sql) globalForDb.sql = create();
+const OPTIONS: postgres.Options<Record<string, postgres.PostgresType>> = {
+  prepare: false,
+  connect_timeout: 10,
+  keep_alive: 15,
+  onnotice: () => {},
+  // Return SQL dates as plain YYYY-MM-DD strings (no timezone shifting).
+  types: { date: { to: 1082, from: [1082], serialize: (x: string) => x, parse: (x: string) => x } },
+};
+
+const requestScope = new AsyncLocalStorage<Sql>();
+const globalForDb = globalThis as unknown as { sql?: Sql };
+
+export function db(): Sql {
+  const scoped = requestScope.getStore();
+  if (scoped) return scoped;
+  if (!globalForDb.sql) globalForDb.sql = postgres(env("DATABASE_URL"), { ...OPTIONS, max: 3, idle_timeout: 20, max_lifetime: 60 * 5 });
   return globalForDb.sql;
-}
-
-/**
- * Stop handing out the current pool (it may hold a stale socket); the next db() call gets a fresh one.
- * The old pool is NOT ended: a pipeline run in the same instance may still be using it. Its idle
- * sockets close via idle_timeout and the pool is garbage-collected.
- */
-export function resetDb() {
-  globalForDb.sql = undefined;
 }
 
 class DbTimeout extends Error {}
 
+function isConnectionProblem(e: unknown): boolean {
+  const code = (e as { code?: string }).code ?? "";
+  return (
+    e instanceof DbTimeout ||
+    /EMAXCONN|max clients reached/i.test(String((e as Error).message)) ||
+    ["57014", "CONNECTION_CLOSED", "CONNECTION_ENDED", "CONNECT_TIMEOUT", "ECONNRESET", "ETIMEDOUT"].includes(code)
+  );
+}
+
 /**
- * Run a page's data loading with a deadline. On timeout or a connection-level error, reset the pool
- * and retry once. Turns a 300-second hang into, at worst, a ~8-second retry.
+ * Run a page's data loading on a fresh, request-scoped connection with a deadline.
+ * On a timeout or connection-level error it retries once on another fresh connection.
+ * The connection is always closed afterwards, so nothing can go stale between requests.
  */
 export async function resilient<T>(load: () => Promise<T>, timeoutMs = 8000): Promise<T> {
   for (let attempt = 0; attempt < 2; attempt++) {
+    const sql = postgres(env("DATABASE_URL"), { ...OPTIONS, max: 3, idle_timeout: 0 });
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       return await Promise.race([
-        load(),
+        requestScope.run(sql, load),
         new Promise<never>((_, reject) => {
           timer = setTimeout(() => reject(new DbTimeout(`Database did not answer within ${timeoutMs} ms`)), timeoutMs);
         }),
       ]);
     } catch (e) {
-      const code = (e as { code?: string }).code ?? "";
-      const poolFull = /EMAXCONNSESSION|max clients reached/i.test(String((e as Error).message));
-      const connectionProblem =
-        poolFull || e instanceof DbTimeout || code === "57014" || code === "CONNECTION_CLOSED" || code === "CONNECTION_ENDED" || code === "CONNECT_TIMEOUT" || code === "ECONNRESET";
-      if (!connectionProblem || attempt === 1) throw e;
-      if (poolFull) await new Promise((r) => setTimeout(r, 1200)); // let other instances release slots
-      else resetDb();
+      if (!isConnectionProblem(e) || attempt === 1) throw e;
     } finally {
       clearTimeout(timer);
+      sql.end({ timeout: 2 }).catch(() => {});
     }
   }
   throw new Error("unreachable");

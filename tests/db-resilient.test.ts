@@ -2,6 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { resilient } from "../lib/db";
 
+// resilient() opens a request-scoped client; it never connects unless a query runs, so a dummy URL is fine.
+process.env.DATABASE_URL ??= "postgres://user:pass@127.0.0.1:5432/none";
+
 test("a hung load is abandoned after the deadline and retried once", async () => {
   let calls = 0;
   const started = Date.now();
