@@ -39,3 +39,4 @@
 | 2026-10-12 | Outreach lifecycle drafted_db → drafted_gmail → sending → sent / rejected / failed / closed_in_gmail; any outreach row (incl. rejected) blocks future drafts for that startup | Contact history; no duplicate outreach |
 | 2026-10-12 | Approve & send is a conditional UPDATE drafted_gmail→sending: double clicks send once | Idempotent send |
 | 2026-10-12 | If Rohit sends/deletes a draft directly in Gmail, the next run sees the draft gone and records closed_in_gmail (counts as contacted) | gmail.compose cannot read Sent; this is the least-privilege way to keep history |
+| 2026-10-12 | Hunter.io (free: 50 searches/100 verifications) used only when the startup's own site has no founder-level email; personal emails must match a known founder's first name; chosen address verified via email-verifier and labelled hunter_verified / hunter_unverified | Credible public index, no guessing; quota spent only on qualified startups |

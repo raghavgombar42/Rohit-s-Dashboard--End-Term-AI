@@ -3,7 +3,7 @@ import { EMAIL_OVERRIDE_TO } from "../env";
 import { generateJSON } from "../gemini";
 import { createDraft, getDraft, GmailNotConnected } from "../gmail";
 import { STAGE_LABEL } from "../labels";
-import { findContact } from "../outreach/contacts";
+import { findContact, hunterContact } from "../outreach/contacts";
 import { EMAIL_PROMPT_VERSION, EMAIL_SYSTEM, EmailSchema, emailPrompt, validateEmail, type EmailInput } from "../outreach/email";
 import { loadActiveThesis } from "../thesis";
 import type { RunContext } from "./context";
@@ -45,7 +45,13 @@ export async function draftStage(ctx: RunContext): Promise<void> {
 
 async function draftOne(ctx: RunContext, q: Qualified, thesis: Awaited<ReturnType<typeof loadActiveThesis>>) {
   const sql = db();
-  const contact = await findContact(q.website, q.domain, q.founders, (q.source_docs ?? []).map((d) => d.text));
+  let contact: { email: string; name: string | null; source: string; status: string; rank: number } | null =
+    await findContact(q.website, q.domain, q.founders, (q.source_docs ?? []).map((d) => d.text));
+  // No founder-level address on their own site → ask Hunter (credible public index), founder match preferred.
+  if (q.domain && (!contact || contact.rank < 4)) {
+    const h = await hunterContact(q.domain, q.founders).catch(() => null);
+    if (h && (!contact || h.rank > contact.rank)) contact = h;
+  }
 
   const input: EmailInput = {
     startup: q.name,

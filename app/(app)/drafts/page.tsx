@@ -17,6 +17,8 @@ const STATUS: Record<string, { label: string; tone: Tone }> = {
 const CONTACT: Record<string, string> = {
   published_on_site: "published on the startup's own website",
   published_in_article: "published in a news article",
+  hunter_verified: "found by Hunter.io and verified deliverable",
+  hunter_unverified: "found by Hunter.io, deliverability not confirmed",
   not_found: "no verified email found — find one before any real send",
 };
 

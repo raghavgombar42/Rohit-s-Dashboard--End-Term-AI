@@ -59,3 +59,55 @@ export async function findContact(website: string | null, domain: string | null,
   const fromArticles = rankEmails(articleTexts.flatMap((t) => t.match(EMAIL_RE) ?? []), domain, founders);
   return fromArticles[0] ? { ...fromArticles[0], source: "article", status: "published_in_article" } : null;
 }
+
+// ---------- Hunter.io (optional): a credible third-party index of public business emails ----------
+
+type HunterEmail = { value: string; type: "personal" | "generic"; confidence: number; first_name: string | null; position: string | null };
+
+export type HunterContact = Omit<Contact, "source" | "status"> & {
+  source: "hunter";
+  status: "hunter_verified" | "hunter_unverified";
+  confidence: number;
+};
+
+/** Used only when the startup's own site gives no founder-level address. Founder name match is required for personal emails. */
+export async function hunterContact(domain: string, founders: { name: string }[]): Promise<HunterContact | null> {
+  const key = process.env.HUNTER_API_KEY;
+  if (!key) return null;
+  const res = await fetch(`https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&limit=10&api_key=${key}`, {
+    signal: AbortSignal.timeout(15000),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Hunter domain-search ${res.status}`);
+  const emails = ((await res.json()) as { data?: { emails?: HunterEmail[] } }).data?.emails ?? [];
+
+  const firstNames = founders.map((f) => f.name.split(/\s+/)[0].toLowerCase()).filter((n) => n.length > 1);
+  const founderHit = emails
+    .filter((e) => e.type === "personal")
+    .map((e) => {
+      const local = e.value.split("@")[0].toLowerCase();
+      const match = firstNames.find((n) => (e.first_name ?? "").toLowerCase() === n || local === n || local.startsWith(`${n}.`) || local.startsWith(n));
+      return match ? { e, founder: founders.find((f) => f.name.toLowerCase().startsWith(match)) } : null;
+    })
+    .filter((x): x is { e: HunterEmail; founder: { name: string } | undefined } => x !== null)
+    .sort((a, b) => b.e.confidence - a.e.confidence)[0];
+
+  const pick = founderHit
+    ? { email: founderHit.e.value.toLowerCase(), name: founderHit.founder?.name ?? null, rank: 4, confidence: founderHit.e.confidence }
+    : (() => {
+        const g = rankEmails(emails.filter((e) => e.type === "generic").map((e) => e.value), domain, founders)[0];
+        const conf = g ? emails.find((e) => e.value.toLowerCase() === g.email)?.confidence ?? 0 : 0;
+        return g ? { email: g.email, name: null, rank: g.rank, confidence: conf } : null;
+      })();
+  if (!pick) return null;
+
+  // Verify deliverability (one verification credit). Unverifiable addresses are kept but labelled.
+  let status: HunterContact["status"] = "hunter_unverified";
+  try {
+    const v = await fetch(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(pick.email)}&api_key=${key}`, { signal: AbortSignal.timeout(20000), cache: "no-store" });
+    if (v.ok && ((await v.json()) as { data?: { result?: string; status?: string } }).data?.status === "valid") status = "hunter_verified";
+  } catch {
+    /* keep unverified */
+  }
+  return { ...pick, source: "hunter", status };
+}
