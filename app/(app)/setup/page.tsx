@@ -14,7 +14,7 @@ export default async function SetupPage({ searchParams }: PageProps<"/setup">) {
   const has = (k: string) => Boolean(process.env[k]);
 
   const rows: { name: string; ok: boolean; optional?: boolean; detail: string }[] = [
-    { name: "Gemini Flash", ok: has("GEMINI_API_KEY"), detail: `Model ${process.env.GEMINI_MODEL ?? "gemini-3.8-flash"} for every AI step` },
+    { name: "Gemini Flash (via OpenRouter)", ok: has("OPENROUTER_API_KEY"), detail: `Model ${process.env.GEMINI_MODEL ?? "google/gemini-3.8-flash"} for every AI step · Google-only routing, no fallbacks` },
     { name: "Supabase Postgres", ok: has("DATABASE_URL"), detail: "Articles, rounds, thesis, assessments, outreach and logs" },
     { name: "Gmail drafts", ok: Boolean(gmail?.account_email), detail: gmail?.account_email ? `Connected as ${gmail.account_email}` : "Not connected" },
     { name: "Hourly schedule", ok: Boolean(cron?.last), detail: cron?.last ? `Supabase pg_cron, last run ${fmtDateTime(cron.last)}` : "No hourly run yet" },

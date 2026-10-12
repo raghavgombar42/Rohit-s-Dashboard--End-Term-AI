@@ -11,7 +11,7 @@ This engine does that work every hour. It reads live Indian funding news and kee
 | **Live app** | https://tandem-forge-outreach.vercel.app |
 | **Components Map** | https://tandem-forge-outreach.vercel.app/components-map.html |
 | **Repository** | https://github.com/raghavgombar42/Rohit-s-Dashboard--End-Term-AI |
-| **Stack** | Next.js 16 (Vercel, Mumbai) · Supabase Postgres · Gemini `gemini-3.8-flash` · Gmail API · Hunter.io |
+| **Stack** | Next.js 16 (Vercel, Mumbai) · Supabase Postgres · Gemini `google/gemini-3.8-flash` via the course OpenRouter key (Google-only routing) · Gmail API · Hunter.io |
 
 > **Safe mode is permanent.** Every email is addressed to a test inbox (`EMAIL_OVERRIDE_TO`). Real founders are never emailed. Each draft's subject shows the founder address it *would* go to.
 
@@ -82,7 +82,7 @@ npm run pipeline                # one pipeline run from the CLI
 
 | Variable | Purpose |
 |---|---|
-| `GEMINI_API_KEY`, `GEMINI_MODEL` | Gemini Flash (comma-separated keys rotate on 429) |
+| `OPENROUTER_API_KEY`, `GEMINI_MODEL` | Gemini Flash via OpenRouter (`google/gemini-3.8-flash`; requests pinned to Google infrastructure, no fallbacks) |
 | `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY` | Supabase (pooler URI; transaction pooler `:6543` on Vercel) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Gmail OAuth (redirect `…/api/google/callback`) |
 | `HUNTER_API_KEY` | optional founder-email lookup |

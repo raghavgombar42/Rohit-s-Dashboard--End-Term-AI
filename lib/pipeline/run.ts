@@ -1,4 +1,5 @@
 import { db } from "../db";
+import { ensureModelAvailable } from "../gemini";
 import { createContext, type RunContext, type RunTrigger } from "./context";
 import { ingestStage } from "./ingest";
 import { triageStage } from "./triage";
@@ -54,7 +55,12 @@ export async function runPipeline(trigger: RunTrigger, budgetMs = 240_000): Prom
   const sql = db();
   let fatal: string | undefined;
 
-  for (const stage of STAGES) {
+  // Rule from the course key document: confirm the model still exists before using it.
+  const model = await ensureModelAvailable().catch((e) => ({ ok: true, id: "?", message: String(e) }));
+  if (model.message) await ctx.log(model.ok ? "warn" : "error", "model", model.message);
+  const stages = model.ok ? STAGES : STAGES.filter((s) => s.name === "ingest");
+
+  for (const stage of stages) {
     if (ctx.timeLeft() <= 0) {
       await ctx.log("warn", stage.name, "Time budget used up; remaining work continues next run");
       break;

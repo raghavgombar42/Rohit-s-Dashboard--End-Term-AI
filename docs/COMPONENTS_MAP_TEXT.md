@@ -55,7 +55,7 @@ Everything below describes the system **as built and live** (12 Oct 2026). Do no
 - Processing · *indigo* · **15** — Validates the email: no number that is not in the facts, no links or placeholders, length, signature. One rewrite with feedback, else not drafted.
 - Output · *indigo* · **18** — Approve & send is a one-way state change (drafted → sending): a double click sends once. Reject deletes the Gmail draft.
 
-**Row 5 — LLM** (Gemini 3.8 Flash · structured JSON)
+**Row 5 — LLM** (Gemini 3.8 Flash via OpenRouter · Google-only routing · structured JSON)
 - AI · *pink* · **5** — Triage: 25 headlines per call. Is this new money raised by a private startup?
 - AI · *pink* · **6** — Extract every round in the article: startup, stage, amount, date, investors, founders, each with a verbatim quote.
 - AI · *pink* · **10** — Research brief from fetched pages only; every fact cites its source and quote.
