@@ -1,8 +1,8 @@
 import postgres from "postgres";
 import { env } from "./env";
 
-// One pooled client per server instance. On Vercel we point DATABASE_URL at Supabase's
-// transaction pooler (port 6543), which requires prepare: false.
+// One pooled client per server instance, connected through Supabase's SESSION pooler (port 5432).
+// (The transaction pooler on 6543 hung with postgres.js pipelining in production, see DECISIONS.md.)
 //
 // Serverless hazard (seen in production): Vercel can freeze an instance while a connection is
 // mid-conversation with the pooler; a later request that picks that stale connection waits forever.
@@ -13,7 +13,7 @@ const globalForDb = globalThis as unknown as { sql?: postgres.Sql };
 function create(): postgres.Sql {
   return postgres(env("DATABASE_URL"), {
     prepare: false,
-    max: 4,
+    max: 3, // session pooler: each client socket holds a server connection (Supabase pool ~15), keep it small
     idle_timeout: 10, // seconds: drop idle sockets quickly (frozen instances wake up with fresh ones)
     max_lifetime: 60 * 5, // seconds: recycle every connection regularly
     connect_timeout: 10,
