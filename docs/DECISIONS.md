@@ -33,3 +33,9 @@
 | 2026-10-12 | Source texts used for an assessment are stored (funding_rounds.source_docs) | Reproducible rescoring against identical evidence |
 | 2026-10-12 | Non-qualified startups are hidden from Rohit's views (Qualified, Funding rounds) and shown only in the audit tab | PDF: "If a startup does not fit, he should never see it" |
 | 2026-10-12 | UI palette: indigo→violet gradient header, colour-coded stats and funnel | User feedback: previous palette too dull |
+| 2026-10-12 | Gmail via direct REST (no SDK), scope gmail.compose only; refresh token AES-256-GCM encrypted in DB; OAuth state cookie checked | Least privilege (cannot read inbox); small dependency surface |
+| 2026-10-12 | Contacts: only emails published on the startup's own website (or articles) on the startup's own domain; never pattern-guessed; no Hunter key → "contact needed" | PDF/brief: never invent contact info |
+| 2026-10-12 | Email: Gemini writes from verified facts F1..Fn; code validates (no unknown numbers, no links/placeholders, length, signature, valid fact ids); one regeneration with the failures as feedback, else not drafted | Hallucination control on the one artefact a founder would read |
+| 2026-10-12 | Outreach lifecycle drafted_db → drafted_gmail → sending → sent / rejected / failed / closed_in_gmail; any outreach row (incl. rejected) blocks future drafts for that startup | Contact history; no duplicate outreach |
+| 2026-10-12 | Approve & send is a conditional UPDATE drafted_gmail→sending: double clicks send once | Idempotent send |
+| 2026-10-12 | If Rohit sends/deletes a draft directly in Gmail, the next run sees the draft gone and records closed_in_gmail (counts as contacted) | gmail.compose cannot read Sent; this is the least-privilege way to keep history |

@@ -183,3 +183,24 @@ export async function listAssessed(qualified: boolean, limit = 100) {
     order by a.total desc
     limit ${limit}`;
 }
+
+export type OutreachRow = {
+  id: string; startup: string; domain: string | null; status: string; subject: string; body: string;
+  intended_to: string | null; intended_to_name: string | null; intended_to_source: string | null; intended_to_status: string | null;
+  sent_to: string; gmail_draft_id: string | null; gmail_message_id: string | null; reject_reason: string | null; last_error: string | null;
+  created_at: Date; approved_at: Date | null; sent_at: Date | null; total: string | null; stage: string; amount_text: string | null;
+  recency_lane: "fresh" | "late_catch"; is_replay: boolean;
+};
+
+export async function listOutreach() {
+  return db()<OutreachRow[]>`
+    select o.id, s.name as startup, s.domain, o.status, o.subject, o.body, o.intended_to, o.intended_to_name, o.intended_to_source,
+           o.intended_to_status, o.sent_to, o.gmail_draft_id, o.gmail_message_id, o.reject_reason, o.last_error,
+           o.created_at, o.approved_at, o.sent_at, a.total, r.stage, r.amount_text, r.recency_lane, o.is_replay
+    from outreach o
+    join startups s on s.id = o.startup_id
+    join funding_rounds r on r.id = o.round_id
+    left join assessments a on a.id = o.assessment_id
+    order by case o.status when 'drafted_gmail' then 0 when 'drafted_db' then 1 when 'sending' then 2 when 'failed' then 3 else 4 end,
+             o.created_at desc`;
+}
