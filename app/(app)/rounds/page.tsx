@@ -1,6 +1,6 @@
-import { resilient } from "@/lib/db";
 import Link from "next/link";
-import { listRounds, type RoundRow } from "@/lib/queries";
+import { type RoundRow } from "@/lib/queries";
+import { roundsData } from "@/lib/cached";
 import { BASIS_LABEL, LANE_LABEL, STAGE_LABEL } from "@/lib/labels";
 import { Badge, Card, Empty, PageHeader, timeAgo } from "@/components/ui";
 import { RoundTabs } from "@/components/round-tabs";
@@ -101,7 +101,7 @@ function RoundCard({ r }: { r: RoundRow }) {
 }
 
 export default async function RoundsPage() {
-  const rounds = await resilient(() => listRounds());
+  const rounds = await roundsData();
   const fresh = rounds.filter((r) => r.recency_lane === "fresh");
   const late = rounds.filter((r) => r.recency_lane === "late_catch");
 

@@ -1,7 +1,5 @@
-import { resilient } from "@/lib/db";
 import Link from "next/link";
-import { dailyNews, funnelCounts, listArticles, listOutreach, listRuns, newsHeatmap, roundOutcomes, sourceHealth } from "@/lib/queries";
-import { loadActiveThesis } from "@/lib/thesis";
+import { overviewData } from "@/lib/cached";
 import { Badge, Card, Empty, RUN_TONE, Stat, fmtDate, fmtDateTime, timeAgo } from "@/components/ui";
 import { ArticleStatus } from "@/components/article-status";
 import { RunNowButton } from "@/components/run-button";
@@ -34,17 +32,7 @@ function greeting() {
 }
 
 export default async function OverviewPage() {
-  const [runs, latest, sources, thesis, funnel, outreach, daily, outcomes, heat] = await resilient(() => Promise.all([
-    listRuns(1),
-    listArticles({ window: "all", view: "unique" }, 6),
-    sourceHealth(),
-    loadActiveThesis(),
-    funnelCounts(),
-    listOutreach(),
-    dailyNews(14),
-    roundOutcomes(),
-    newsHeatmap(),
-  ]));
+  const [runs, latest, sources, thesis, funnel, outreach, daily, outcomes, heat] = await overviewData();
   const lastRun = runs[0];
   const live = sources.filter((s) => s.enabled);
   const waiting = outreach.filter((o) => o.status === "drafted_gmail" || o.status === "drafted_db");

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { OPERATOR_COOKIE, isOperator, safeEqual } from "@/lib/auth";
 import { exchangeCode } from "@/lib/gmail";
+import { refreshDashboard } from "@/lib/refresh";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const email = await exchangeCode(sp.get("code") ?? "", request.nextUrl.origin);
+    refreshDashboard();
     const res = back(`gmail=connected&as=${encodeURIComponent(email)}`);
     res.cookies.delete("tfa_oauth_state");
     return res;

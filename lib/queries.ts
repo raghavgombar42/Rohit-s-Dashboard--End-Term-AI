@@ -255,3 +255,8 @@ export async function newsHeatmap() {
             and (reject_reason is null or reject_reason not like 'duplicate_of:%')) s
     group by 1, 2`;
 }
+
+export async function lastHourlyRun() {
+  const [row] = await db()<{ last: Date | null }[]>`select max(started_at) as last from pipeline_runs where trigger = 'cron_hourly'`;
+  return row ?? { last: null };
+}

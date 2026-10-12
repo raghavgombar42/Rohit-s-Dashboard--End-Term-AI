@@ -1,5 +1,6 @@
 import { db } from "../db";
 import { ensureModelAvailable } from "../gemini";
+import { refreshDashboard } from "../refresh";
 import { createContext, type RunContext, type RunTrigger } from "./context";
 import { ingestStage } from "./ingest";
 import { triageStage } from "./triage";
@@ -78,5 +79,6 @@ export async function runPipeline(trigger: RunTrigger, budgetMs = 240_000): Prom
   await sql`
     update pipeline_runs set status = ${status}, finished_at = now(), counts = ${sql.json(ctx.counts)}, error = ${fatal ?? null}
     where id = ${runId}`;
+  refreshDashboard(); // new data is visible on the next page view
   return { status, runId, counts: ctx.counts, error: fatal };
 }

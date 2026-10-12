@@ -1,12 +1,10 @@
-import { resilient } from "@/lib/db";
 import Link from "next/link";
-import { listAssessed } from "@/lib/queries";
-import { loadActiveThesis } from "@/lib/thesis";
+import { qualifiedData } from "@/lib/cached";
 import { Empty, PageHeader } from "@/components/ui";
 import { QualifiedCard } from "@/components/assessment";
 
 export default async function QualifiedPage() {
-  const [rows, thesis] = await resilient(() => Promise.all([listAssessed(true), loadActiveThesis()]));
+  const [rows, thesis] = await qualifiedData();
 
   return (
     <div>

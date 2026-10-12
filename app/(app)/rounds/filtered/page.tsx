@@ -1,13 +1,11 @@
-import { resilient } from "@/lib/db";
-import { listAssessed, listFilteredOut } from "@/lib/queries";
+import { filteredData } from "@/lib/cached";
 import { humanReason } from "@/lib/labels";
-import { loadActiveThesis } from "@/lib/thesis";
 import { Badge, Card, Empty, PageHeader, timeAgo } from "@/components/ui";
 import { RoundTabs } from "@/components/round-tabs";
 import { CriteriaBars, ScoreRing } from "@/components/assessment";
 
 export default async function FilteredPage() {
-  const [rows, notFit, thesis] = await resilient(() => Promise.all([listFilteredOut(), listAssessed(false), loadActiveThesis()]));
+  const [rows, notFit, thesis] = await filteredData();
 
   return (
     <div>

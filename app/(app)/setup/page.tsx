@@ -1,16 +1,10 @@
-import { gmailStatus } from "@/lib/gmail";
-import { db, resilient } from "@/lib/db";
+import { setupData } from "@/lib/cached";
 import { operatorMode } from "@/components/operator";
 import { Badge, Card, PageHeader, fmtDateTime } from "@/components/ui";
 
 export default async function SetupPage({ searchParams }: PageProps<"/setup">) {
   const sp = await searchParams;
-  const [gmail, operator, cronRows] = await resilient(() => Promise.all([
-    gmailStatus(),
-    operatorMode(),
-    db()<{ last: Date | null }[]>`select max(started_at) as last from pipeline_runs where trigger = 'cron_hourly'`,
-  ]));
-  const cron = cronRows[0];
+  const [{ gmail, cron }, operator] = await Promise.all([setupData(), operatorMode()]);
   const has = (k: string) => Boolean(process.env[k]);
 
   const rows: { name: string; ok: boolean; optional?: boolean; detail: string }[] = [

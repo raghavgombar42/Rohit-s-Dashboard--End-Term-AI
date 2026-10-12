@@ -1,6 +1,5 @@
-import { resilient } from "@/lib/db";
 import Link from "next/link";
-import { listRuns } from "@/lib/queries";
+import { runsData } from "@/lib/cached";
 import { Badge, Card, Empty, PageHeader, RUN_TONE, duration, fmtDateTime } from "@/components/ui";
 import { RunNowButton } from "@/components/run-button";
 
@@ -13,7 +12,7 @@ const TRIGGER_LABEL: Record<string, string> = {
 
 export default async function RunsPage({ searchParams }: PageProps<"/runs">) {
   const sp = await searchParams;
-  const runs = await resilient(() => listRuns(50));
+  const runs = await runsData();
 
   return (
     <div>

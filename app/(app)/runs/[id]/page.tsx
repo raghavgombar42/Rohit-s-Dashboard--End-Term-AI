@@ -1,7 +1,6 @@
-import { resilient } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getRun } from "@/lib/queries";
+import { runDetailData } from "@/lib/cached";
 import { Badge, Card, PageHeader, RUN_TONE, duration, fmtDateTime } from "@/components/ui";
 
 const COUNT_LABELS: Record<string, string> = {
@@ -27,7 +26,7 @@ export default async function RunDetailPage({ params }: PageProps<"/runs/[id]">)
   const { id } = await params;
   const n = Number(id);
   if (!Number.isInteger(n)) notFound();
-  const data = await resilient(() => getRun(n));
+  const data = await runDetailData(n);
   if (!data) notFound();
   const { run, events } = data;
 

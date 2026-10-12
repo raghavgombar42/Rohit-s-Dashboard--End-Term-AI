@@ -1,6 +1,6 @@
-import { resilient } from "@/lib/db";
 import Link from "next/link";
-import { listOutreach, type OutreachRow } from "@/lib/queries";
+import { type OutreachRow } from "@/lib/queries";
+import { draftsData } from "@/lib/cached";
 import { STAGE_LABEL } from "@/lib/labels";
 import { operatorMode } from "@/components/operator";
 import { Badge, Card, Empty, PageHeader, fmtDateTime, type Tone } from "@/components/ui";
@@ -100,7 +100,7 @@ function DraftCard({ o, operator }: { o: OutreachRow; operator: boolean }) {
 
 export default async function DraftsPage({ searchParams }: PageProps<"/drafts">) {
   const sp = await searchParams;
-  const [rows, operator] = await resilient(() => Promise.all([listOutreach(), operatorMode()]));
+  const [rows, operator] = await Promise.all([draftsData(), operatorMode()]);
   const isOpen = (o: OutreachRow) => ["drafted_gmail", "drafted_db", "sending", "failed"].includes(o.status);
   const open = rows.filter(isOpen);
   const done = rows.filter((o) => !isOpen(o));
