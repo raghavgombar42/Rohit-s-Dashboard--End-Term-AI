@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Funding Outreach Engine — Components Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Swimlane board: actors down the left, the six stages of the class template across.
+   Numbered cards sit where each step happens; numbers give the order for one startup. */
+:root {
+  --paper: #f3f5fb; --board: #ffffff; --ink: #0f172a; --muted: #55607a; --line: #e2e7f1;
+  --rail-1: #1e1b4b; --rail-2: #3b2a8c; --rail-ink: #eef0ff;
+  --ai: #c026d3; --ai-soft: #fdf0fe;
+  --code: #4f46e5; --code-soft: #eef0ff;
+  --data: #0891b2; --data-soft: #e6f7fb;
+  --human: #c2620a; --human-soft: #fff4e6;
+  --cut: #e11d48; --cut-soft: #ffe8ee;
+  --lane-a: #fbfcfe; --lane-b: #f5f7fc;
+  --display: "Instrument Serif", Georgia, serif;
+  --body: "Inter", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 14px/1.45 var(--body); }
+.wrap { max-width: 1380px; margin: 0 auto; padding: 0 20px 56px; display: grid; gap: 26px; }
+.hero { background: radial-gradient(900px 260px at 85% -40%, rgba(236,72,153,.35), transparent 60%),
+        linear-gradient(115deg, var(--rail-1), var(--rail-2) 55%, #6d28d9); color: #fff; }
+.hero .in { max-width: 1380px; margin: 0 auto; padding: 34px 20px 30px; display: grid; gap: 10px; }
+.eyebrow { font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+h1 { font: 400 clamp(32px, 4.4vw, 50px)/1.02 var(--display); margin: 0; letter-spacing: -.01em; }
+.lede { max-width: 92ch; margin: 0; font-size: 15px; opacity: .88; }
+.links { display: flex; flex-wrap: wrap; gap: 8px 18px; font: 12.5px var(--mono); }
+.links a { color: #f5d0fe; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.key { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 14px; height: 14px; border-radius: 4px; border: 2px solid; }
+.sw.ai { border-color: var(--ai); background: var(--ai-soft); }
+.sw.code { border-color: var(--code); background: var(--code-soft); }
+.sw.data { border-color: var(--data); background: var(--data-soft); }
+.sw.human { border-color: var(--human); background: var(--human-soft); }
+.sw.cut { border-color: var(--cut); background: var(--cut-soft); }
+.scroller { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); background: var(--board); box-shadow: 0 10px 30px -18px rgba(30,27,75,.35); }
+.board { display: grid; grid-template-columns: 158px repeat(6, minmax(168px, 1fr)); min-width: 1200px; }
+.head { position: sticky; top: 0; z-index: 1; background: var(--rail-1); color: var(--rail-ink); font: 500 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; text-align: center; padding: 11px 6px; }
+.head:first-child { text-align: left; padding-left: 14px; }
+.actor { background: linear-gradient(180deg, var(--rail-1), var(--rail-2)); color: var(--rail-ink); padding: 14px; border-top: 1px solid rgba(255,255,255,.08); display: grid; align-content: center; gap: 3px; }
+.actor b { font: 600 14.5px var(--body); }
+.actor span { font: 10.5px var(--mono); opacity: .72; }
+.cell { border-top: 1px solid var(--line); border-left: 1px dashed var(--line); padding: 10px 8px; display: grid; align-content: center; gap: 8px; min-width: 0; }
+.row-a .cell { background: var(--lane-a); } .row-b .cell { background: var(--lane-b); }
+.board > .row { display: contents; }
+.card { background: var(--board); border: 1.5px solid; border-radius: 10px; padding: 8px 10px 9px; font-size: 12.3px; line-height: 1.42; min-width: 0; }
+.card .n { font: 600 11px var(--mono); display: block; margin-bottom: 2px; }
+.card.ai { border-color: var(--ai); background: var(--ai-soft); } .card.ai .n { color: var(--ai); }
+.card.code { border-color: var(--code); } .card.code .n { color: var(--code); }
+.card.data { border-color: var(--data); } .card.data .n { color: var(--data); }
+.card.human { border-color: var(--human); background: var(--human-soft); } .card.human .n { color: var(--human); }
+.card b { font-weight: 600; }
+.card code { font: 10.8px var(--mono); background: var(--code-soft); padding: 0 3px; border-radius: 3px; overflow-wrap: anywhere; }
+.never { display: block; margin-top: 5px; font: 10.5px var(--mono); color: var(--cut); }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.note { background: var(--board); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: grid; gap: 8px; align-content: start; }
+.note h2 { font: 400 22px/1.15 var(--display); margin: 0; }
+.note p, .note li { margin: 0; }
+.note ul { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+.note .tag { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.note.cut { border-color: var(--cut); background: var(--cut-soft); } .note.cut .tag { color: var(--cut); }
+table.t { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.t td { padding: 4px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t td:last-child { text-align: right; font: 12.3px var(--mono); white-space: nowrap; padding-left: 12px; }
+table.t tr:last-child td { border-bottom: 0; }
+.foot { font-size: 12px; color: var(--muted); max-width: 110ch; }
+</style>
+</head>
+<body>
+<header class="hero"><div class="in">
+  <div class="eyebrow">MESA C4 · AI Final · Problem Statement 6 (Hard) · as built and live, 12 Oct 2026</div>
+  <h1>Timed Funding Outreach Engine — Components Map</h1>
+  <p class="lede">Every hour the engine reads live Indian startup-funding news, keeps only new pre-seed and seed rounds that fit the accelerator thesis stored in Supabase, researches each startup, and leaves a personalised email in Rohit's Gmail Drafts folder. Every box below exists in the running system; numbers show the order for one startup.</p>
+  <div class="links">
+    <a href="https://tandem-forge-outreach.vercel.app">tandem-forge-outreach.vercel.app</a>
+    <a href="https://github.com/raghavgombar42/Rohit-s-Dashboard--End-Term-AI">github.com/raghavgombar42/Rohit-s-Dashboard--End-Term-AI</a>
+  </div>
+</div></header>
+
+<div class="wrap">
+  <div class="legend" aria-label="Legend" style="margin-top:22px">
+    <span class="key"><span class="sw ai"></span>AI judgement (Gemini 3.8 Flash)</span>
+    <span class="key"><span class="sw code"></span>Deterministic code (Next.js on Vercel)</span>
+    <span class="key"><span class="sw data"></span>Data, constraints &amp; external APIs</span>
+    <span class="key"><span class="sw human"></span>A person acts</span>
+    <span class="key"><span class="sw cut"></span>The Cut: what the system never does</span>
+  </div>
+
+  <div class="scroller" role="region" aria-label="Components map, scrolls sideways on small screens" tabindex="0">
+    <div class="board">
+      <div class="head">Actor</div><div class="head">Trigger</div><div class="head">Input</div><div class="head">Context</div><div class="head">Processing</div><div class="head">AI</div><div class="head">Output</div>
+
+      <!-- Rohit -->
+      <div class="row row-a">
+        <div class="actor"><b>Rohit</b><span>recruitment lead · Tandem Forge (fictional)</span></div>
+        <div class="cell"><div class="card human"><span class="n">0</span>Optional <b>Run now</b> from the dashboard (operator mode).</div></div>
+        <div class="cell"></div>
+        <div class="cell"><div class="card human"><span class="n">T</span>Edits the <b>thesis</b> row in the Supabase Table Editor (sectors, exclusions, criteria, weights, threshold). No code, no deploy.</div></div>
+        <div class="cell"></div><div class="cell"></div>
+        <div class="cell"><div class="card human"><span class="n">17</span>Reviews each draft in Gmail or the dashboard: edits, <b>Approve &amp; send</b>, or <b>Reject</b> with a reason.<span class="never">✕ nothing is ever sent without him</span></div></div>
+      </div>
+
+      <!-- Scheduler -->
+      <div class="row row-b">
+        <div class="actor"><b>Scheduler</b><span>Supabase pg_cron · Vercel Cron</span></div>
+        <div class="cell"><div class="card data"><span class="n">1</span><b>pg_cron</b> fires hourly (:05) and POSTs <code>/api/cron/run</code> with a bearer secret kept in Supabase Vault. Vercel Cron runs daily as a backstop.</div></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+      </div>
+
+      <!-- News sources -->
+      <div class="row row-a">
+        <div class="actor"><b>Funding news</b><span>9 live RSS feeds</span></div>
+        <div class="cell"></div>
+        <div class="cell"><div class="card data"><span class="n">3</span>Inc42, Inc42 Buzz, Entrackr, YourStory, ET Tech Funding, TechCrunch Venture + 3 Google News searches (seed India, fintech/insurtech, D2C/quick commerce). Headline, publisher, publish time.</div></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+      </div>
+
+      <!-- Backend -->
+      <div class="row row-b">
+        <div class="actor"><b>Pipeline</b><span>Next.js 16 on Vercel (Mumbai)</span></div>
+        <div class="cell"><div class="card code"><span class="n">2</span>Takes the <b>run lock</b> (one run at a time), 240 s work budget, resumable: unfinished items wait for the next hour.</div></div>
+        <div class="cell"><div class="card code"><span class="n">4</span>Normalises URLs and headlines. Same URL → stored once; same headline from another outlet → kept as a source, never re-sent to AI.</div></div>
+        <div class="cell"></div>
+        <div class="cell">
+          <div class="card code"><span class="n">7</span>Checks every quote is really in the article (else the fact is dropped). <b>Hard gates</b>: pre-seed/seed/angel · India · new announcement · announced ≤ 24 h (fresh) or ≤ 30 days (late catch).</div>
+          <div class="card code"><span class="n">12</span><b>Decides fit</b>: evidence-or-zero, thesis weights, excluded sectors, threshold. Below the bar → hidden from Rohit (audit tab only).</div>
+          <div class="card code"><span class="n">15</span>Validates the email: no number that is not in the facts, no links or placeholders, length, signature. One rewrite with feedback, else not drafted.</div>
+        </div>
+        <div class="cell"></div>
+        <div class="cell"><div class="card code"><span class="n">18</span><b>Approve &amp; send</b> is a conditional update <code>drafted → sending</code>: a double click sends once. Reject deletes the Gmail draft.</div></div>
+      </div>
+
+      <!-- Gemini -->
+      <div class="row row-a">
+        <div class="actor"><b>LLM</b><span>Gemini 3.8 Flash · structured JSON</span></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell">
+          <div class="card ai"><span class="n">5</span><b>Triage</b> 25 headlines per call: is this new money raised by a private startup?</div>
+          <div class="card ai"><span class="n">6</span><b>Extract</b> every round in the article: startup, stage, amount, date, investors, founders, each with a <b>verbatim quote</b>.</div>
+          <div class="card ai"><span class="n">10</span><b>Research brief</b> from fetched pages only; every fact cites its source and quote.</div>
+          <div class="card ai"><span class="n">11</span><b>Fit score</b> 0–10 per thesis criterion with evidence. Never sees the weights or the threshold.</div>
+          <div class="card ai"><span class="n">14</span><b>Writes the email</b> from verified facts F1…Fn only.<span class="never">✕ no invented claims or numbers</span></div>
+        </div>
+        <div class="cell"></div>
+      </div>
+
+      <!-- Supabase -->
+      <div class="row row-b">
+        <div class="actor"><b>Database</b><span>Supabase Postgres</span></div>
+        <div class="cell"></div><div class="cell"></div>
+        <div class="cell"><div class="card data"><span class="n">10a</span>Reads the <b>thesis, fresh, at scoring time</b>. A trigger validates every edit, bumps the version and snapshots it; each assessment stores the version it used.</div></div>
+        <div class="cell"><div class="card data"><span class="n">8</span><b>Identity &amp; dedup</b>: startup by domain then name; same startup + stage within 21 days = one round (5 articles → 1 round). Already contacted → skipped.</div></div>
+        <div class="cell"></div>
+        <div class="cell"><div class="card data"><span class="n">19</span><b>Contact history</b>: unique index allows one outreach per startup, ever. Runs, events and every LLM call are logged for audit and cost.</div></div>
+      </div>
+
+      <!-- Startup web -->
+      <div class="row row-a">
+        <div class="actor"><b>Startup web</b><span>company sites · Hunter.io</span></div>
+        <div class="cell"></div><div class="cell"></div>
+        <div class="cell">
+          <div class="card data"><span class="n">9</span><b>Website</b>: Gemini + Google Search proposes ≤ 3 URLs; code accepts one only if it loads and shows the startup's name. Homepage and About pages fetched.</div>
+          <div class="card data"><span class="n">13</span><b>Contact</b>: email published on the startup's own site, else Hunter.io founder match, verified deliverable.<span class="never">✕ never guesses firstname@domain</span></div>
+        </div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+      </div>
+
+      <!-- Gmail -->
+      <div class="row row-b">
+        <div class="actor"><b>Gmail</b><span>rohit.guptaa1141@gmail.com</span></div>
+        <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+        <div class="cell"><div class="card data"><span class="n">16</span>Draft appears in Rohit's <b>Drafts folder</b> (OAuth, <code>gmail.compose</code> only, token AES-encrypted). Drafts he sends or deletes in Gmail are detected next run.<span class="never">✕ safe mode: To = test inbox</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <section class="note cut">
+      <span class="tag">The Cut</span>
+      <h2>Three things the engine never does</h2>
+      <ul>
+        <li><b>Never emails a founder or sends on its own.</b> Every draft is addressed to the safe-mode test inbox; sending needs Rohit's click in operator mode.</li>
+        <li><b>Never contacts a startup twice.</b> A database unique index allows one outreach per startup, ever. Rejected and Gmail-handled drafts count as history.</li>
+        <li><b>Never invents.</b> Funding facts, founders and contacts must come from fetched sources; quotes are checked by code; email addresses are never guessed.</li>
+      </ul>
+    </section>
+
+    <section class="note">
+      <span class="tag">AI proposes, code decides</span>
+      <h2>Where judgement sits</h2>
+      <p>Gemini reads, extracts, researches, scores and writes. Every decision that must be predictable is code or a database constraint: dedup, dates and recency, stage and geography gates, quote verification, weights and threshold, state transitions, one-outreach-per-startup and send-once.</p>
+      <p>When Rohit edits the thesis, rounds not yet drafted are re-scored on the next run. Threshold or weight changes are re-applied by code to the same verified scores (no AI call); wording or sector changes ask Gemini again.</p>
+    </section>
+
+    <section class="note">
+      <span class="tag">Running cost</span>
+      <h2>What one researched draft costs</h2>
+      <table class="t">
+        <tr><td>Gemini, per qualified startup (website, research, fit, email): ≈ 6.3k input + 2.5k output tokens, measured</td><td>≈ $0.014</td></tr>
+        <tr><td>Gemini, per article: triage share + extraction if funding news</td><td>≈ $0.0001–0.002</td></tr>
+        <tr><td>Supabase, Vercel Hobby, Gmail API, RSS, Hunter.io free tiers</td><td>$0</td></tr>
+        <tr><td>Typical day (~200 articles, ~60 funding stories, ~7 qualified)</td><td>≈ $0.25</td></tr>
+      </table>
+      <p class="foot">Token counts are measured from the app's own <code>llm_calls</code> log. Prices are third-party listings for Gemini 3.8 Flash ($0.75 / $3.75 per million tokens) and may change.</p>
+    </section>
+  </div>
+
+  <p class="foot">Thesis (v5): Indian pre-seed/seed/angel startups in fintech, insurtech, D2C tech and D2C brands, quick commerce; excluded: B2B SaaS, AI-first tooling, climate, crypto; qualify at ≥ 65/100 on five weighted criteria. Old or non-thesis news is filtered by code before any research; non-fits are visible only in the audit view.</p>
+</div>
+</body>
+</html>

@@ -30,7 +30,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       </header>
       <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
       <footer className="mx-auto max-w-6xl px-4 pb-10 text-xs text-faint">
-        Fictional accelerator built for the Mesa C4 AI final. All data shown is read live from Supabase. AI: Gemini Flash.
+        Fictional accelerator built for the Mesa C4 AI final. All data shown is read live from Supabase. AI: Gemini Flash. · <a href="/components-map.html" className="text-accent hover:underline">Components map ↗</a>
       </footer>
     </div>
   );
