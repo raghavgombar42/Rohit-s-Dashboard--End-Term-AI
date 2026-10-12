@@ -49,8 +49,8 @@ Activity is fully logged: runs, rounds, drafts, rejects, 0 duplicate outreach.
 Not yet tracked: founder replies and sign-ups, the outcome that matters. That's the next metric.
 
 **08 · ROI worth it? — YES**
-About $0.014 of AI per researched draft, about $0.25 a day, every other service on a free tier.
-It pays for itself if it saves Rohit one minute a day; manual work is ~20 min per startup.
+About $0.085 of AI per researched draft (OpenRouter-reported), under $1 a day; every other service on a free tier.
+It pays for itself if it saves Rohit a few minutes a day; manual work is ~20 min per startup.
 
 ## BOUNDARY — any No means: put a human exactly here
 

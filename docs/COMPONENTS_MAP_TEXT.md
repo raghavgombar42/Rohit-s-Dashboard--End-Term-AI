@@ -87,10 +87,10 @@ Everything below describes the system **as built and live** (12 Oct 2026). Do no
 Gemini reads, extracts, researches, scores and writes. Everything that must be predictable is code or a database rule: dedup, dates, stage and geography gates, quote checks, weights and threshold, one-outreach-per-startup, send-once. When Rohit edits the thesis, startups not yet drafted are re-scored on the next run: number changes are re-applied by code with no AI call; wording changes ask Gemini again.
 
 **Running cost**
-- Gemini per qualified startup (website, research, fit, email): ≈ 6.3k input + 2.5k output tokens (measured) → ≈ $0.014
-- Per article (triage + extraction if funding news): ≈ $0.0001–0.002
+- Gemini per qualified startup (website search, research, fit, email): ≈ $0.085, of which Google web search ≈ $0.057
+- Per article (triage share + extraction if funding news): ≈ $0.0005–0.005
 - Supabase, Vercel, Gmail API, RSS, Hunter.io: free tiers → $0
-- Typical day (~200 articles, ~60 funding stories, ~7 qualified): ≈ $0.25
-- *Tokens measured from the app's own log; price is a third-party listing for Gemini 3.8 Flash ($0.75 / $3.75 per million tokens).*
+- Typical day (~200 articles, ~60 funding stories, ~7 qualified): ≈ $0.90
+- *Exact per-call costs as reported by OpenRouter and logged by the app (llm_calls.cost_usd).*
 
 **Footer line:** Live app: tandem-forge-outreach.vercel.app · Code: github.com/raghavgombar42/Rohit-s-Dashboard--End-Term-AI
