@@ -138,7 +138,7 @@ export async function listFilteredOut(limit = 200) {
 }
 
 export async function funnelCounts() {
-  const [row] = await db()<{ articles: number; funding: number; rounds_pass: number; rounds_fresh: number; filtered: number; qualified: number; not_fit: number }[]>`
+  const [row] = await db()<{ articles: number; funding: number; rounds_pass: number; rounds_fresh: number; filtered: number; qualified: number; not_fit: number; drafted: number }[]>`
     select
       (select count(*) from articles where not is_replay and (reject_reason is null or reject_reason not like 'duplicate_of:%'))::int as articles,
       (select count(*) from articles where not is_replay and status in ('candidate','linked','rejected') and (reject_reason is null or reject_reason not like 'duplicate_of:%'))::int as funding,
@@ -146,7 +146,8 @@ export async function funnelCounts() {
       (select count(*) from funding_rounds where not is_replay and recency_lane = 'fresh')::int as rounds_fresh,
       (select count(*) from articles a, jsonb_array_elements(a.extraction->'rounds') x where x->>'outcome' like 'rejected:%')::int as filtered,
       (select count(*) from funding_rounds where not is_replay and status in ('qualified','drafted'))::int as qualified,
-      (select count(*) from funding_rounds where not is_replay and status = 'not_qualified')::int as not_fit`;
+      (select count(*) from funding_rounds where not is_replay and status = 'not_qualified')::int as not_fit,
+      (select count(*) from outreach where not is_replay)::int as drafted`;
   return row;
 }
 
