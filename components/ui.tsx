@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
+import { CountUp } from "./count-up";
 
 export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?: string; title: string; description?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div className="rise mb-8 flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-2xl">
-        {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">{eyebrow}</p>}
-        <h1 className="mt-1 font-display text-[2.6rem] leading-tight tracking-tight">{title}</h1>
+        {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-300">{eyebrow}</p>}
+        <h1 className="mt-2 text-4xl font-medium leading-tight tracking-tight">{title}</h1>
         {description && <p className="mt-2 text-[15px] leading-relaxed text-muted">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
@@ -15,7 +16,7 @@ export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?:
 
 export function Card({ title, subtitle, children, right, flush }: { title?: string; subtitle?: ReactNode; children: ReactNode; right?: ReactNode; flush?: boolean }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_1px_2px_rgba(20,20,20,0.04)]">
+    <section className="glass rise overflow-hidden rounded-2xl">
       {title && (
         <div className="flex items-start justify-between gap-4 px-5 pt-4 pb-3">
           <div>
@@ -50,24 +51,24 @@ export function Badge({ tone = "neutral", children, dot }: { tone?: Tone; childr
 }
 
 const STAT_TONES = {
-  violet: { bar: "from-violet-500 to-fuchsia-500", chip: "bg-violet-100 text-violet-700" },
-  sky: { bar: "from-sky-500 to-cyan-400", chip: "bg-sky-100 text-sky-700" },
-  emerald: { bar: "from-emerald-500 to-teal-400", chip: "bg-emerald-100 text-emerald-700" },
-  amber: { bar: "from-amber-500 to-orange-400", chip: "bg-amber-100 text-amber-700" },
-  pink: { bar: "from-pink-500 to-rose-400", chip: "bg-pink-100 text-pink-700" },
+  violet: { bar: "from-violet-500 to-fuchsia-500", chip: "bg-violet-500/15 text-violet-300" },
+  sky: { bar: "from-sky-500 to-cyan-400", chip: "bg-sky-500/15 text-sky-300" },
+  emerald: { bar: "from-lime-400 to-emerald-400", chip: "bg-lime-400/15 text-lime-300" },
+  amber: { bar: "from-amber-500 to-orange-400", chip: "bg-amber-400/15 text-amber-300" },
+  pink: { bar: "from-pink-500 to-rose-400", chip: "bg-pink-500/15 text-pink-300" },
 } as const;
 export type StatTone = keyof typeof STAT_TONES;
 
 export function Stat({ label, value, hint, tone = "violet", icon }: { label: string; value: ReactNode; hint?: ReactNode; tone?: StatTone; icon?: ReactNode }) {
   const t = STAT_TONES[tone];
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-line bg-surface px-5 py-4 shadow-[0_1px_3px_rgba(15,23,42,0.05)]">
+    <div className="glass relative overflow-hidden rounded-2xl px-5 py-4">
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${t.bar}`} />
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-medium text-muted">{label}</p>
         {icon && <span className={`grid h-7 w-7 place-items-center rounded-lg text-sm ${t.chip}`}>{icon}</span>}
       </div>
-      <p className={typeof value === "number" ? "mt-1.5 font-display text-4xl leading-none tabular-nums" : "mt-2 text-2xl font-semibold leading-none tracking-tight"}>{value}</p>
+      <p className={typeof value === "number" ? "mt-1.5 font-display text-4xl leading-none tabular-nums" : "mt-2 text-2xl font-semibold leading-none tracking-tight"}>{typeof value === "number" ? <CountUp value={value} /> : value}</p>
       {hint && <div className="mt-2 text-xs text-faint">{hint}</div>}
     </div>
   );
@@ -85,7 +86,7 @@ export function Empty({ title, children }: { title: string; children?: ReactNode
 export function Button({ children, variant = "primary", type = "submit" }: { children: ReactNode; variant?: "primary" | "ghost"; type?: "submit" | "button" }) {
   const cls =
     variant === "primary"
-      ? "bg-ink text-white hover:bg-ink/85"
+      ? "bg-accent text-white hover:opacity-90"
       : "border border-line bg-surface text-ink hover:bg-sunken";
   return (
     <button type={type} className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition ${cls}`}>

@@ -7,30 +7,34 @@ export const dynamic = "force-dynamic";
 
 export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="min-h-screen">
-      <header className="brand-gradient sticky top-0 z-10 text-white shadow-[0_8px_30px_-12px_rgba(30,27,75,0.6)]">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex items-center gap-3 pt-3">
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-fuchsia-400 via-violet-400 to-sky-400 font-display text-xl text-white shadow-lg shadow-fuchsia-500/30">
-                T
-              </span>
-              <span className="leading-tight">
-                <span className="block text-sm font-semibold">Tandem Forge</span>
-                <span className="block text-[11px] text-white/60">Funding Outreach Engine</span>
-              </span>
-            </Link>
-            <span className="ml-auto hidden rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white/85 ring-1 ring-white/15 sm:inline">
-              🛡 Safe mode · emails go to a test inbox only
+    <div className="relative min-h-screen">
+      <div className="aurora" aria-hidden />
+      <header className="sticky top-0 z-20 border-b border-white/5 bg-background/70 backdrop-blur-xl">
+        <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 px-4 py-3 lg:grid-cols-[auto_1fr_auto]">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-[conic-gradient(from_200deg,#a78bfa,#f0abfc,#7dd3fc,#a78bfa)] p-[2px]">
+              <span className="grid h-full w-full place-items-center rounded-full bg-background font-display text-lg text-ink">T</span>
+            </span>
+            <span className="leading-tight">
+              <span className="block text-sm font-semibold">Tandem Forge</span>
+              <span className="block text-[11px] text-muted">Funding Outreach Engine</span>
+            </span>
+          </Link>
+          <div className="col-span-2 row-start-2 min-w-0 lg:col-span-1 lg:row-start-1 lg:col-start-2 lg:justify-self-center">
+            <Nav />
+          </div>
+          <div className="col-start-2 row-start-1 flex items-center justify-end gap-2 lg:col-start-3">
+            <span className="hidden items-center gap-1.5 rounded-full bg-lime-400/10 px-3 py-1.5 text-xs font-medium text-lime-300 ring-1 ring-lime-300/20 xl:inline-flex">
+              <span className="pulse-dot h-1.5 w-1.5 rounded-full bg-lime-300 text-lime-300" /> Safe mode · test inbox only
             </span>
             <OperatorControl />
           </div>
-          <Nav />
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
-      <footer className="mx-auto max-w-6xl px-4 pb-10 text-xs text-faint">
-        Fictional accelerator built for the Mesa C4 AI final. All data shown is read live from Supabase. AI: Gemini Flash. · <a href="/components-map.html" className="text-accent hover:underline">Components map ↗</a>
+      <main className="mx-auto max-w-7xl px-4 py-10">{children}</main>
+      <footer className="mx-auto max-w-7xl px-4 pb-10 text-xs text-faint">
+        Fictional accelerator built for the Mesa C4 AI final. All data shown is read live from Supabase. AI: Gemini Flash. ·{" "}
+        <a href="/components-map.html" className="text-accent hover:underline">Components map ↗</a>
       </footer>
     </div>
   );

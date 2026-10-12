@@ -1,28 +1,30 @@
 @import "tailwindcss";
 
+/* Dark "night desk" theme: deep navy canvas, glass cards, indigo-violet brand, lime for fresh/good. */
 :root {
-  --background: #f3f5fb;
-  --surface: #ffffff;
-  --sunken: #eef1f8;
-  --ink: #0f172a;
-  --muted: #55607a;
-  --faint: #94a0b8;
-  --line: #e2e7f1;
-  --accent: #5b4cf0;        /* indigo-violet */
-  --accent-soft: #eeecff;
-  --brand-1: #1e1b4b;       /* header gradient */
+  color-scheme: dark;
+  --background: #070818;
+  --surface: #0f1128;
+  --sunken: #161936;
+  --ink: #eef0ff;
+  --muted: #9aa3c7;
+  --faint: #6a7299;
+  --line: #22264a;
+  --accent: #8b7bff;
+  --accent-soft: #1d1a45;
+  --brand-1: #1e1b4b;
   --brand-2: #3b2a8c;
   --brand-3: #6d28d9;
-  --good: #059669;
-  --good-soft: #e3f8ef;
-  --warn: #c2620a;
-  --warn-soft: #fff1df;
-  --bad: #e11d48;
-  --bad-soft: #ffe8ee;
-  --info: #0284c7;
-  --info-soft: #e2f3fd;
-  --pink: #db2777;
-  --pink-soft: #fde8f3;
+  --good: #b5f23d;          /* lime */
+  --good-soft: #1b2a0c;
+  --warn: #fbbf24;
+  --warn-soft: #2b2110;
+  --bad: #fb7185;
+  --bad-soft: #321420;
+  --info: #5ec8ff;
+  --info-soft: #0f2539;
+  --pink: #f472b6;
+  --pink-soft: #33142a;
 }
 
 @theme inline {
@@ -60,20 +62,110 @@ body {
   font-feature-settings: "cv11", "ss01";
 }
 
-::selection {
-  background: var(--accent-soft);
-}
+::selection { background: #3b2f8f; }
 
-.brand-gradient {
-  background:
-    radial-gradient(1200px 300px at 85% -40%, rgba(236, 72, 153, 0.35), transparent 60%),
-    radial-gradient(900px 260px at 10% 120%, rgba(56, 189, 248, 0.22), transparent 60%),
-    linear-gradient(115deg, var(--brand-1) 0%, var(--brand-2) 55%, var(--brand-3) 100%);
+/* Glass card surface used by Card/Stat. */
+.glass {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)), var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 40px -24px rgba(0, 0, 0, 0.7);
 }
 
 .text-gradient {
-  background: linear-gradient(100deg, #5b4cf0, #c026d3 60%, #f43f5e);
+  background: linear-gradient(100deg, #b7acff, #f0abfc 55%, #fda4af);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* ---------- Motion (Jitter-inspired) ---------- */
+
+/* Slowly drifting gradient glow behind the page top ("gradient website" template). */
+.aurora {
+  position: fixed;
+  inset: -20vh -10vw auto -10vw;
+  height: 70vh;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(70px);
+  opacity: 0.55;
+  background:
+    radial-gradient(40% 50% at 20% 40%, rgba(124, 58, 237, 0.55), transparent 70%),
+    radial-gradient(35% 45% at 75% 30%, rgba(236, 72, 153, 0.35), transparent 70%),
+    radial-gradient(30% 40% at 55% 70%, rgba(56, 189, 248, 0.25), transparent 70%);
+  animation: aurora 22s ease-in-out infinite alternate;
+}
+@keyframes aurora {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(4vw, 3vh, 0) scale(1.08); }
+  100% { transform: translate3d(-3vw, -2vh, 0) scale(1.02); }
+}
+
+/* Cards rise in one after another. Children of .stagger get increasing delays. */
+.rise { animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.stagger > * { animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.08s; }
+.stagger > *:nth-child(3) { animation-delay: 0.14s; }
+.stagger > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger > *:nth-child(5) { animation-delay: 0.26s; }
+.stagger > *:nth-child(6) { animation-delay: 0.32s; }
+.stagger > *:nth-child(n + 7) { animation-delay: 0.38s; }
+
+/* Bars grow from the baseline in sequence ("bar chart sleep tracker" template). Delay set inline. */
+.grow-bar {
+  transform-origin: bottom;
+  animation: grow-y 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes grow-y {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+.grow-x {
+  transform-origin: left;
+  animation: grow-x 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* SVG arcs (donut, score rings) draw themselves. --len and --dash are set inline. */
+.draw {
+  stroke-dasharray: var(--dash) var(--len);
+  animation: draw 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes draw {
+  from { stroke-dasharray: 0 var(--len); }
+}
+
+/* Heatmap cells pop in. */
+.pop { animation: pop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: none; }
+}
+
+/* "Live" pulse dot. */
+.pulse-dot { position: relative; }
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.35;
+  animation: pulse 1.8s ease-out infinite;
+}
+@keyframes pulse {
+  from { transform: scale(0.6); opacity: 0.45; }
+  to { transform: scale(1.8); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora, .rise, .stagger > *, .grow-bar, .grow-x, .draw, .pop, .pulse-dot::after { animation: none !important; }
 }

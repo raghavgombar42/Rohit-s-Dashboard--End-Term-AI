@@ -205,3 +205,53 @@ export async function listOutreach() {
     order by case o.status when 'drafted_gmail' then 0 when 'drafted_db' then 1 when 'sending' then 2 when 'failed' then 3 else 4 end,
              o.created_at desc`;
 }
+
+// ---------- Overview charts (all real data) ----------
+
+
+/** Unique articles and funding stories per IST day for the last N days (zero-filled). */
+export async function dailyNews(days = 14) {
+  return db()<{ day: string; label: string; articles: number; funding: number }[]>`
+    with d as (
+      select generate_series((now() at time zone 'Asia/Kolkata')::date - ${days - 1}::int, (now() at time zone 'Asia/Kolkata')::date, interval '1 day')::date as day
+    )
+    select to_char(d.day, 'YYYY-MM-DD') as day, to_char(d.day, 'DD Mon') as label,
+           count(a.id)::int as articles,
+           count(a.id) filter (where a.status in ('candidate', 'linked', 'rejected'))::int as funding
+    from d left join articles a
+      on (coalesce(a.published_at, a.first_seen_at) at time zone 'Asia/Kolkata')::date = d.day
+     and not a.is_replay and (a.reject_reason is null or a.reject_reason not like 'duplicate_of:%')
+    group by d.day order by d.day`;
+}
+
+/** What happened to every round Gemini extracted: first hard-gate reason, thesis non-fit, or qualified. */
+export async function roundOutcomes() {
+  const sql = db();
+  const gate = await sql<{ reason: string; n: number }[]>`
+    select case
+             when x->>'outcome' like '%stage_not_in_thesis%' then 'Wrong stage'
+             when x->>'outcome' like '%geography%' then 'Outside India'
+             when x->>'outcome' like '%stale%' then 'Too old'
+             when x->>'outcome' like '%old_round%' then 'Old news'
+             else 'Unverified'
+           end as reason, count(*)::int as n
+    from articles a, jsonb_array_elements(a.extraction->'rounds') x
+    where x->>'outcome' like 'rejected:%' and not a.is_replay
+    group by 1`;
+  const [fit] = await sql<{ qualified: number; not_fit: number }[]>`
+    select count(*) filter (where status in ('qualified', 'drafted'))::int as qualified,
+           count(*) filter (where status = 'not_qualified')::int as not_fit
+    from funding_rounds where not is_replay`;
+  return [...gate.sort((a, b) => b.n - a.n), { reason: "Not a thesis fit", n: fit.not_fit }, { reason: "Qualified", n: fit.qualified }].filter((r) => r.n > 0);
+}
+
+/** Funding stories by IST weekday (0=Mon) × 4-hour block (0 = 00–04 … 5 = 20–24). */
+export async function newsHeatmap() {
+  return db()<{ dow: number; block: number; n: number }[]>`
+    select ((extract(isodow from t)::int) - 1) as dow, (extract(hour from t)::int / 4) as block, count(*)::int as n
+    from (select (coalesce(published_at, first_seen_at) at time zone 'Asia/Kolkata') as t
+          from articles
+          where not is_replay and status in ('candidate', 'linked', 'rejected')
+            and (reject_reason is null or reject_reason not like 'duplicate_of:%')) s
+    group by 1, 2`;
+}

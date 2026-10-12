@@ -4,12 +4,25 @@ import { Badge, Card } from "./ui";
 
 export function ScoreRing({ score, threshold, size = 76 }: { score: number; threshold: number; size?: number }) {
   const pass = score >= threshold;
-  const color = pass ? "#7c3aed" : "#94a0b8";
+  const r = 42;
+  const c = 2 * Math.PI * r;
+  const id = `ring-${size}-${Math.round(score * 10)}`;
   return (
-    <div className="relative grid shrink-0 place-items-center rounded-full" style={{ width: size, height: size, background: `conic-gradient(${color} ${score * 3.6}deg, #eef1f8 0deg)` }}>
-      <div className="grid place-items-center rounded-full bg-surface" style={{ width: size - 12, height: size - 12 }}>
-        <span className="font-display text-2xl leading-none tabular-nums">{Math.round(score)}</span>
-        <span className="text-[9px] uppercase tracking-wider text-faint">/ 100</span>
+    <div className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90">
+        <defs>
+          <linearGradient id={id} x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stopColor={pass ? "#a78bfa" : "#64748b"} />
+            <stop offset="100%" stopColor={pass ? "#f0abfc" : "#94a3b8"} />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="9" />
+        <circle cx="50" cy="50" r={r} fill="none" stroke={`url(#${id})`} strokeWidth="9" strokeLinecap="round" className="draw"
+          style={{ ["--dash" as string]: `${(score / 100) * c}`, ["--len" as string]: `${c}` }} />
+      </svg>
+      <div className="relative text-center leading-none">
+        <span className="font-display text-2xl tabular-nums">{Math.round(score)}</span>
+        <span className="block text-[9px] uppercase tracking-wider text-faint">/ 100</span>
       </div>
     </div>
   );
@@ -30,7 +43,7 @@ export function CriteriaBars({ a }: { a: AssessedRow }) {
             <span className="tabular-nums text-muted">{c.score}/10</span>
           </div>
           <div className="mt-1 h-1.5 rounded-full bg-sunken">
-            <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: `${c.score * 10}%` }} />
+            <div className="grow-x h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400" style={{ width: `${c.score * 10}%` }} />
           </div>
           <p className="mt-1 text-xs text-muted">{c.reasoning}</p>
           {c.evidence && (
