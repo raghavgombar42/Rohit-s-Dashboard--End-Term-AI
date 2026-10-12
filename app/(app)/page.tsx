@@ -1,3 +1,4 @@
+import { resilient } from "@/lib/db";
 import Link from "next/link";
 import { dailyNews, funnelCounts, listArticles, listOutreach, listRuns, newsHeatmap, roundOutcomes, sourceHealth } from "@/lib/queries";
 import { loadActiveThesis } from "@/lib/thesis";
@@ -33,7 +34,7 @@ function greeting() {
 }
 
 export default async function OverviewPage() {
-  const [runs, latest, sources, thesis, funnel, outreach, daily, outcomes, heat] = await Promise.all([
+  const [runs, latest, sources, thesis, funnel, outreach, daily, outcomes, heat] = await resilient(() => Promise.all([
     listRuns(1),
     listArticles({ window: "all", view: "unique" }, 6),
     sourceHealth(),
@@ -43,7 +44,7 @@ export default async function OverviewPage() {
     dailyNews(14),
     roundOutcomes(),
     newsHeatmap(),
-  ]);
+  ]));
   const lastRun = runs[0];
   const live = sources.filter((s) => s.enabled);
   const waiting = outreach.filter((o) => o.status === "drafted_gmail" || o.status === "drafted_db");

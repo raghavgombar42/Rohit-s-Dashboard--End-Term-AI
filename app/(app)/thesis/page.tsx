@@ -1,3 +1,4 @@
+import { resilient } from "@/lib/db";
 import { listThesisVersions, loadActiveThesis } from "@/lib/thesis";
 import { Badge, Card, PageHeader, fmtDateTime, type Tone } from "@/components/ui";
 
@@ -12,7 +13,7 @@ function Chips({ items, tone = "neutral" }: { items: string[]; tone?: Tone }) {
 }
 
 export default async function ThesisPage() {
-  const [t, versions] = await Promise.all([loadActiveThesis(), listThesisVersions()]);
+  const [t, versions] = await resilient(() => Promise.all([loadActiveThesis(), listThesisVersions()]));
   const totalWeight = Object.values(t.criteria).reduce((s, c) => s + c.weight, 0);
   const editor = supabaseTableEditorUrl();
 

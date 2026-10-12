@@ -1,3 +1,4 @@
+import { resilient } from "@/lib/db";
 import Link from "next/link";
 import { listArticles, type DiscoveryFilter } from "@/lib/queries";
 import { Card, Empty, PageHeader, fmtDateTime, timeAgo } from "@/components/ui";
@@ -13,7 +14,7 @@ function pick<T extends string>(v: unknown, allowed: readonly (readonly [T, stri
 export default async function DiscoveriesPage({ searchParams }: PageProps<"/discoveries">) {
   const sp = await searchParams;
   const f: DiscoveryFilter = { window: pick(sp.window, WINDOWS, "24h"), view: pick(sp.view, VIEWS, "unique") };
-  const rows = await listArticles(f);
+  const rows = await resilient(() => listArticles(f));
   const href = (patch: Partial<DiscoveryFilter>) => `/discoveries?${new URLSearchParams({ ...f, ...patch })}`;
 
   return (

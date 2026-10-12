@@ -1,3 +1,4 @@
+import { resilient } from "@/lib/db";
 import Link from "next/link";
 import { listOutreach, type OutreachRow } from "@/lib/queries";
 import { STAGE_LABEL } from "@/lib/labels";
@@ -99,7 +100,7 @@ function DraftCard({ o, operator }: { o: OutreachRow; operator: boolean }) {
 
 export default async function DraftsPage({ searchParams }: PageProps<"/drafts">) {
   const sp = await searchParams;
-  const [rows, operator] = await Promise.all([listOutreach(), operatorMode()]);
+  const [rows, operator] = await resilient(() => Promise.all([listOutreach(), operatorMode()]));
   const isOpen = (o: OutreachRow) => ["drafted_gmail", "drafted_db", "sending", "failed"].includes(o.status);
   const open = rows.filter(isOpen);
   const done = rows.filter((o) => !isOpen(o));

@@ -9,7 +9,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="relative min-h-screen">
       <div className="aurora" aria-hidden />
-      <header className="sticky top-0 z-20 border-b border-white/5 bg-background/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-20 border-b border-white/5 bg-background/85 backdrop-blur-md">
         <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 px-4 py-3 lg:grid-cols-[auto_1fr_auto]">
           <Link href="/" className="flex items-center gap-2.5">
             <span className="grid h-9 w-9 place-items-center rounded-full bg-[conic-gradient(from_200deg,#a78bfa,#f0abfc,#7dd3fc,#a78bfa)] p-[2px]">

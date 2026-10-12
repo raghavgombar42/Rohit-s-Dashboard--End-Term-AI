@@ -1,3 +1,4 @@
+import { resilient } from "@/lib/db";
 import Link from "next/link";
 import { listRounds, type RoundRow } from "@/lib/queries";
 import { BASIS_LABEL, LANE_LABEL, STAGE_LABEL } from "@/lib/labels";
@@ -100,7 +101,7 @@ function RoundCard({ r }: { r: RoundRow }) {
 }
 
 export default async function RoundsPage() {
-  const rounds = await listRounds();
+  const rounds = await resilient(() => listRounds());
   const fresh = rounds.filter((r) => r.recency_lane === "fresh");
   const late = rounds.filter((r) => r.recency_lane === "late_catch");
 

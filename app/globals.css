@@ -87,18 +87,20 @@ body {
   height: 70vh;
   z-index: -1;
   pointer-events: none;
-  filter: blur(70px);
-  opacity: 0.55;
+  /* No CSS blur filter: soft radial gradients look the same and cost far less to paint.
+     Only transform is animated, so the browser moves one composited layer. */
+  opacity: 0.5;
+  will-change: transform;
   background:
-    radial-gradient(40% 50% at 20% 40%, rgba(124, 58, 237, 0.55), transparent 70%),
-    radial-gradient(35% 45% at 75% 30%, rgba(236, 72, 153, 0.35), transparent 70%),
-    radial-gradient(30% 40% at 55% 70%, rgba(56, 189, 248, 0.25), transparent 70%);
+    radial-gradient(40% 50% at 20% 40%, rgba(124, 58, 237, 0.45), transparent 75%),
+    radial-gradient(35% 45% at 75% 30%, rgba(236, 72, 153, 0.28), transparent 75%),
+    radial-gradient(30% 40% at 55% 70%, rgba(56, 189, 248, 0.2), transparent 75%);
   animation: aurora 22s ease-in-out infinite alternate;
 }
 @keyframes aurora {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(4vw, 3vh, 0) scale(1.08); }
-  100% { transform: translate3d(-3vw, -2vh, 0) scale(1.02); }
+  0% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(4vw, 3vh, 0); }
+  100% { transform: translate3d(-3vw, -2vh, 0); }
 }
 
 /* Cards rise in one after another. Children of .stagger get increasing delays. */
@@ -166,6 +168,14 @@ body {
   to { transform: scale(1.8); opacity: 0; }
 }
 
+/* Loading skeleton shimmer. */
+.skeleton {
+  background: linear-gradient(100deg, rgba(255,255,255,0.04) 30%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .aurora, .rise, .stagger > *, .grow-bar, .grow-x, .draw, .pop, .pulse-dot::after { animation: none !important; }
+  .aurora, .rise, .stagger > *, .grow-bar, .grow-x, .draw, .pop, .pulse-dot::after, .skeleton { animation: none !important; }
 }

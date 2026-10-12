@@ -1,3 +1,4 @@
+import { resilient } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRun } from "@/lib/queries";
@@ -26,7 +27,7 @@ export default async function RunDetailPage({ params }: PageProps<"/runs/[id]">)
   const { id } = await params;
   const n = Number(id);
   if (!Number.isInteger(n)) notFound();
-  const data = await getRun(n);
+  const data = await resilient(() => getRun(n));
   if (!data) notFound();
   const { run, events } = data;
 
