@@ -13,8 +13,8 @@ const globalForDb = globalThis as unknown as { sql?: postgres.Sql };
 function create(): postgres.Sql {
   return postgres(env("DATABASE_URL"), {
     prepare: false,
-    max: 3, // session pooler: each client socket holds a server connection (Supabase pool ~15), keep it small
-    idle_timeout: 10, // seconds: drop idle sockets quickly (frozen instances wake up with fresh ones)
+    max: 2, // session pooler allows ~15 clients in total across all instances: hold few, release fast
+    idle_timeout: 3, // seconds: give pooler slots back almost immediately after a request
     max_lifetime: 60 * 5, // seconds: recycle every connection regularly
     connect_timeout: 10,
     keep_alive: 15, // TCP keep-alive to detect dead sockets sooner
@@ -56,10 +56,12 @@ export async function resilient<T>(load: () => Promise<T>, timeoutMs = 8000): Pr
       ]);
     } catch (e) {
       const code = (e as { code?: string }).code ?? "";
+      const poolFull = /EMAXCONNSESSION|max clients reached/i.test(String((e as Error).message));
       const connectionProblem =
-        e instanceof DbTimeout || code === "57014" || code === "CONNECTION_CLOSED" || code === "CONNECTION_ENDED" || code === "CONNECT_TIMEOUT" || code === "ECONNRESET";
+        poolFull || e instanceof DbTimeout || code === "57014" || code === "CONNECTION_CLOSED" || code === "CONNECTION_ENDED" || code === "CONNECT_TIMEOUT" || code === "ECONNRESET";
       if (!connectionProblem || attempt === 1) throw e;
-      resetDb();
+      if (poolFull) await new Promise((r) => setTimeout(r, 1200)); // let other instances release slots
+      else resetDb();
     } finally {
       clearTimeout(timer);
     }
